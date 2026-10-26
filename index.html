@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>London Trip 2026</title>
+<meta name="description" content="Guida di viaggio interattiva per Londra, 31 ottobre – 2 novembre 2026">
+<meta name="theme-color" content="#0b1630">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* =========================================================
+   TEMA — palette ispirata a Londra: blu notte, avorio, rosso
+   ========================================================= */
+:root{
+  --bg:#f6f1e7; --card:#fffdf8; --ink:#0b1630; --muted:#5b6478; --line:#e3dccb;
+  --accent:#c8102e; --accent-ink:#fff; --navy:#0b1630; --soft:#efe8d8;
+  --d1:#c8102e; --d2:#1f5fd6; --d3:#0e8f6a;
+  --ok:#1a7f4b; --warn:#a85d00; --info:#38538f;
+  --shadow:0 1px 2px rgba(11,22,48,.06),0 6px 18px rgba(11,22,48,.07);
+  --radius:18px; --nav-h:64px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a1226; --card:#121c36; --ink:#f2ecdf; --muted:#9aa6c0; --line:#223056;
+    --accent:#ff4d62; --accent-ink:#0a1226; --soft:#18264a;
+    --d1:#ff5a6e; --d2:#6a9cff; --d3:#33c9a0;
+    --ok:#4cc88a; --warn:#f0b254; --info:#8fa9e6;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a1226; --card:#121c36; --ink:#f2ecdf; --muted:#9aa6c0; --line:#223056;
+  --accent:#ff4d62; --accent-ink:#0a1226; --soft:#18264a;
+  --d1:#ff5a6e; --d2:#6a9cff; --d3:#33c9a0;
+  --ok:#4cc88a; --warn:#f0b254; --info:#8fa9e6;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);overflow-x:hidden}
+h1,h2,h3{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;margin:0;line-height:1.2;letter-spacing:.1px}
+h2{font-size:1.35rem;margin:22px 0 10px}
+h3{font-size:1.08rem}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:860px;margin:0 auto;padding:14px 16px}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
+
+/* ---------- Card, bottoni, chip ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:12px 0}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:9px 15px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink);transition:transform .12s,box-shadow .12s;min-height:42px;font-size:.93rem}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.navy{background:var(--navy);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 12px;min-height:34px;font-size:.85rem}
+.btn.big{padding:16px 22px;font-size:1.1rem;min-height:56px;width:100%;justify-content:center}
+.btn.on{background:var(--ok);color:#fff;border-color:transparent}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.chip{appearance:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:.85rem;cursor:pointer;white-space:nowrap;min-height:34px}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+:root[data-theme="dark"] .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.badge.ok{background:rgba(26,127,75,.14);color:var(--ok)}
+.badge.warn{background:rgba(168,93,0,.15);color:var(--warn)}
+.badge.info{background:rgba(56,83,143,.15);color:var(--info)}
+.badge.red{background:rgba(200,16,46,.12);color:var(--accent)}
+
+/* ---------- Navigazione ---------- */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:1200;background:var(--card);border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px rgba(11,22,48,.1)}
+nav.bottom button{flex:1;appearance:none;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;
+  color:var(--muted);font-size:.7rem;font-weight:600;cursor:pointer;border-radius:12px;max-width:140px}
+nav.bottom button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.bottom button.on{color:var(--accent)}
+nav.bottom button .dot{position:absolute;margin:-4px 0 0 16px;width:9px;height:9px;border-radius:50%;background:var(--accent)}
+
+/* ---------- Hero / Home ---------- */
+.hero{background:linear-gradient(160deg,#0b1630 0%,#17295a 60%,#2a1530 100%);color:#f6f1e7;border-radius:var(--radius);padding:22px 18px;
+  position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(200,16,46,.55),transparent 70%)}
+.hero h1{font-size:2rem;position:relative;z-index:1}
+.hero p{margin:6px 0 0;opacity:.88;position:relative;z-index:1}
+.count{display:flex;gap:10px;margin-top:16px;position:relative;z-index:1}
+.count div{background:rgba(255,255,255,.1);border-radius:14px;padding:8px 12px;min-width:62px;text-align:center}
+.count b{display:block;font-size:1.5rem;font-family:Georgia,serif}
+.count span{font-size:.7rem;opacity:.8;text-transform:uppercase;letter-spacing:.06em}
+.clock{font:700 2.4rem/1 Georgia,serif;position:relative;z-index:1;margin-top:12px}
+.progress{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--d1),var(--d2),var(--d3));border-radius:99px;transition:width .4s}
+.alert{border-left:5px solid var(--accent);background:rgba(200,16,46,.08);padding:10px 14px;border-radius:12px;margin:10px 0;font-weight:600}
+.alert.info{border-color:var(--info);background:rgba(56,83,143,.1)}
+
+/* ---------- Foto ---------- */
+.photo{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px;background:var(--soft);display:block}
+.ph{width:100%;aspect-ratio:16/9;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;
+  background:linear-gradient(135deg,var(--soft),var(--line))}
+.credit{font-size:.68rem;color:var(--muted);margin-top:3px}
+
+/* ---------- Timeline ---------- */
+.day-head{display:flex;align-items:center;gap:10px;margin:22px 0 4px}
+.day-dot{width:14px;height:14px;border-radius:50%;flex:none}
+.tl{position:relative;margin:8px 0 0}
+.stop{display:grid;grid-template-columns:42px 1fr;gap:10px;position:relative}
+.stop .rail{position:relative;display:flex;flex-direction:column;align-items:center}
+.stop .rail::after{content:"";position:absolute;top:36px;bottom:-14px;width:2px;background:var(--line)}
+.stop:last-child .rail::after{display:none}
+.num{width:34px;height:34px;border-radius:50%;background:var(--c,var(--d1));color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.9rem;z-index:1;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.stop .body{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.stop.next .body{border-color:var(--accent);box-shadow:0 0 0 2px rgba(200,16,46,.25),var(--shadow)}
+.stop.done .body{opacity:.62}
+.stop.done .num{background:var(--ok)}
+.stop.skipped .body{opacity:.5;border-style:dashed}
+.stop.skipped .num{background:var(--muted)}
+.stop.removed .body{opacity:.45;border-style:dotted}
+.stop .t{font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.stop h3{margin:2px 0 2px}
+.stop .addr{font-size:.82rem;color:var(--muted)}
+.leg{margin:-4px 0 8px 52px;font-size:.78rem;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.leg span{background:var(--soft);border-radius:99px;padding:2px 10px}
+.stop-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.fav{color:#e0a100}
+
+/* ---------- Sheet (finestre) ---------- */
+.sheet-bg{position:fixed;inset:0;background:rgba(5,10,25,.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center;animation:fade .18s}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:92dvh;overflow:auto;border-radius:22px 22px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+@media(min-width:760px){.sheet-bg{align-items:center}.sheet{border-radius:22px}}
+.sheet .top{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-16px;background:var(--bg);padding:8px 0;z-index:3}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.facts{display:grid;gap:8px;margin:10px 0}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.fact b{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);display:block}
+label.f{display:block;margin:10px 0 4px;font-size:.82rem;font-weight:700;color:var(--muted)}
+input[type=text],input[type=time],input[type=number],select,textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;min-height:44px}
+textarea{min-height:76px;resize:vertical}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none}
+
+/* ---------- Mappa ---------- */
+#view-map .wrap{padding-bottom:0}
+#map{height:calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom) - 150px);min-height:340px;border-radius:var(--radius);border:1px solid var(--line);z-index:1}
+.mk{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;color:#fff;font-weight:800;font-size:.85rem;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);position:relative}
+.mk i{position:absolute;right:-9px;top:-10px;font-style:normal;font-size:.8rem;background:#fff;border-radius:50%;width:18px;height:18px;line-height:18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.mk.done{opacity:.55}
+.leaflet-popup-content{margin:12px 14px;min-width:210px}
+.pop h4{margin:6px 0 2px;font-family:Georgia,serif;font-size:1rem}
+.pop .btns{display:grid;gap:6px;margin-top:8px}
+.pop .btn{justify-content:center;width:100%;min-height:38px;padding:6px 10px;font-size:.84rem;color:#0b1630;background:#fff}
+.pop .btn.primary{background:#c8102e;color:#fff}
+.pop img,.pop .ph{aspect-ratio:16/9;width:100%;object-fit:cover;border-radius:10px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin:6px 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+
+/* ---------- Biglietti ---------- */
+.tk h3{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tk ul{margin:8px 0 0;padding-left:18px}
+.tk li{margin:3px 0;font-size:.9rem}
+.sec-title{display:flex;align-items:center;gap:8px;margin:26px 0 6px}
+.sec-title .badge{font-size:.8rem}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.92rem}
+.kv b{color:var(--muted);font-weight:600}
+table.sun{width:100%;border-collapse:collapse;font-size:.9rem}
+table.sun td,table.sun th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;
+  padding:10px 16px;border-radius:99px;z-index:3000;font-weight:600;font-size:.9rem;box-shadow:var(--shadow);max-width:90vw;text-align:center}
+.view{animation:fade .2s}
+details.card summary{cursor:pointer;font-weight:700}
+
+/* ---------- Stampa ---------- */
+@media print{
+  nav.bottom,.stop-actions,.btn,.chips,#toast,.no-print{display:none!important}
+  body{background:#fff;color:#000;padding:0}
+  .card,.stop .body{box-shadow:none;break-inside:avoid}
+  .view{display:block!important}
+  #view-map,#view-tickets,#view-info,#view-home{display:none!important}
+  #view-itin{display:block!important}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="banner-slot" class="wrap" style="padding-bottom:0"></div>
+<main>
+  <section id="view-home" class="view"><div class="wrap" id="home-root"></div></section>
+  <section id="view-itin" class="view hidden"><div class="wrap" id="itin-root"></div></section>
+  <section id="view-map" class="view hidden"><div class="wrap" id="map-root"></div></section>
+  <section id="view-tickets" class="view hidden"><div class="wrap" id="tickets-root"></div></section>
+  <section id="view-info" class="view hidden"><div class="wrap" id="info-root"></div></section>
+</main>
+
+<nav class="bottom" aria-label="Navigazione principale">
+  <button data-nav="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/></svg>Home</button>
+  <button data-nav="itin"><svg viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.4"/><circle cx="4.5" cy="12" r="1.4"/><circle cx="4.5" cy="18" r="1.4"/></svg>Itinerario</button>
+  <button data-nav="map"><svg viewBox="0 0 24 24"><path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2zM9 3v16M15 5v16"/></svg>Mappa</button>
+  <button data-nav="tickets"><svg viewBox="0 0 24 24"><path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4z"/><path d="M14 7v12" stroke-dasharray="2 3"/></svg>Biglietti<span class="dot hidden" id="tk-dot"></span></button>
+  <button data-nav="info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
+</nav>
+<div id="sheet-root"></div>
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" onerror="window.__noLeaflet=true"></script>
+<script>
+"use strict";
+/* =====================================================================
+   DATI DEL VIAGGIO  (qui si modificano luoghi, orari e biglietti di base)
+   ---------------------------------------------------------------------
+   Livelli di affidabilità (campo v):
+     2 = verificato su pagina ufficiale il 26/10/2026
+     1 = fonte non ufficiale o informazione generale, da riconfermare
+     0 = DA VERIFICARE (non è stato possibile verificarlo)
+     3 = dato fornito da te
+   Le coordinate sono approssimative (±100 m): la navigazione usa
+   nome/indirizzo, non le coordinate.
+   ===================================================================== */
+const LAST_CHECK = "26/10/2026";
+const TRIP = {
+  landing: "2026-10-31T15:30:00Z",  // Londra è in GMT (UTC+0) dal 25/10/2026
+  takeoff: "2026-11-02T19:00:00Z",
+  days: [
+    { n:1, date:"2026-10-31", label:"Sabato 31 ottobre",  theme:"Arrivo e Londra by night" },
+    { n:2, date:"2026-11-01", label:"Domenica 1 novembre", theme:"Museo, mercatini e Tower Bridge" },
+    { n:3, date:"2026-11-02", label:"Lunedì 2 novembre",   theme:"Monumenti iconici e Camden" }
+  ]
+};
+const CATS = {
+  monumenti:{label:"Monumenti",icon:"🏛️"}, musei:{label:"Musei",icon:"🦕"}, mercati:{label:"Mercati",icon:"🛍️"},
+  quartieri:{label:"Quartieri",icon:"🏙️"}, panorami:{label:"Panorami",icon:"🌉"}, trasporti:{label:"Trasporti",icon:"🚆"}, hotel:{label:"Hotel",icon:"🛏️"}
+};
+const V_LABEL = {2:["ok","✔ Verificato"],1:["info","ⓘ Da riconfermare"],0:["warn","⚠ Da verificare"],3:["ok","✔ Dato tuo"]};
+const OUT = ["Spazio pubblico all'aperto, sempre accessibile (negozi e locali hanno orari propri)",1];
+const FREE = ["Gratuito (spazio pubblico)",1];
+
+const BASE_STOPS = [
+/* ---------------------------- GIORNO 1 ---------------------------- */
+{id:"d1-stn",day:1,time:"15:30",dur:60,cats:["trasporti"],icon:"✈️",name:"Aeroporto di London Stansted (STN)",
+ lat:51.8860,lng:0.2389,addr:"London Stansted Airport, Stansted CM24 1QW",q:"London Stansted Airport",wiki:"London_Stansted_Airport",
+ site:"https://www.stanstedexpress.com/",
+ desc:"Arrivo del volo. La stazione ferroviaria dello Stansted Express è collegata al terminal.",
+ why:"Punto di arrivo: da qui parte il treno per Liverpool Street.",
+ hours:["Atterraggio previsto alle 15:30 (ora di Londra = 16:30 in Italia). Partenza del treno indicativa ~16:30",3],
+ price:["Stansted Express Duo Return già acquistato (£75)",3],
+ book:["Nessuna prenotazione da fare",3],
+ tips:["Servono passaporto e, per i cittadini UE, l'ETA britannica: verifica su gov.uk/eta (vedi sezione Info).","Duo Return: i due viaggiatori devono restare insieme per tutto il viaggio (condizione ufficiale)."]},
+{id:"d1-lst",day:1,time:"17:15",dur:15,cats:["trasporti"],icon:"🚉",name:"Liverpool Street Station",
+ lat:51.5178,lng:-0.0817,addr:"Liverpool Street Station, London EC2M 7PY",q:"Liverpool Street Station, London",wiki:"Liverpool_Street_station",
+ site:"https://www.stanstedexpress.com/",
+ desc:"Capolinea londinese dello Stansted Express, collegato a Elizabeth line, Central, Circle, Hammersmith & City e Metropolitan.",
+ why:"Snodo principale per muoversi in città e vicino all'hotel.",
+ hours:["Arrivo stimato ~17:15: la durata del viaggio in treno non è stata verificata",0],
+ price:["Compreso nel Duo Return",3],book:["—",3],
+ tr:"Stansted Express da STN (partenza ~16:30; durata ~45–50 min, da verificare sul sito).",
+ tips:["Nessuna modifica programmata al servizio per il 31/10 secondo la pagina ufficiale (consultata l'11/08/2026): ricontrolla il giorno prima."]},
+{id:"d1-hotel",day:1,time:"17:45",dur:45,cats:["hotel"],icon:"🛏️",name:"Hotel – Private en-suite Room (Brick Lane)",
+ lat:51.5180,lng:-0.0752,addr:"70 Commercial Street, London E1 6LT",q:"70 Commercial Street, London E1 6LT",
+ site:"https://www.booking.com/hotel/gb/private-en-suite-room-liverpool-street-brick-ln.html",
+ desc:"Camera privata con bagno nella zona di Spitalfields/Brick Lane, indicata come vicina a Liverpool Street.",
+ why:"Base per le tre giornate: check-in, bagagli e poi si parte.",
+ hours:["Orari di check-in/check-out e deposito bagagli: controlla la conferma Booking",0],
+ price:["Già prenotato",3],book:["Già prenotato",3],
+ tr:"A piedi da Liverpool Street (pochi minuti: verifica il percorso su Maps).",
+ tips:["Controlla sul voucher Booking l'indirizzo esatto e il punto sulla mappa: qui è quello da te indicato (70 Commercial Street, E1 6LT). Le coordinate sulla mappa sono approssimative.","Il 2/11 il piano prevede di recuperare i bagagli: chiedi se l'hotel li custodisce dopo il check-out."]},
+{id:"d1-cov",day:1,time:"19:00",dur:30,cats:["quartieri"],icon:"🏙️",name:"Covent Garden",
+ lat:51.5117,lng:-0.1240,addr:"Covent Garden Market, London WC2E 8RF",q:"Covent Garden Market, London",wiki:"Covent_Garden",
+ site:"https://www.coventgarden.london/",
+ desc:"Piazza storica con mercato coperto, artisti di strada e negozi; di sera è illuminata e vivace.",
+ why:"L'atmosfera classica di Londra di sera, a due passi dai teatri del West End.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"Dall'hotel: Elizabeth line da Liverpool Street a Tottenham Court Road, poi ~12 min a piedi (verifica sul planner TfL/Google Maps).",
+ tips:["Pub storico nei dintorni: The Lamb & Flag (Rose Street) – orari non verificati.","Notte di Halloween: aspettati più folla in centro."]},
+{id:"d1-sev",day:1,time:"19:30",dur:20,cats:["quartieri"],icon:"🏙️",name:"Seven Dials",
+ lat:51.5136,lng:-0.1272,addr:"Seven Dials, London WC2H",q:"Seven Dials, London",wiki:"Seven_Dials",
+ desc:"Incrocio di sette strade con una colonna-meridiana al centro, circondato da negozi indipendenti e pub.",
+ why:"Angolo meno turistico e molto fotogenico, a pochi passi da Covent Garden.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Covent Garden (poche centinaia di metri).",tips:["Le sette strade partono da un pilastro con sei meridiane."]},
+{id:"d1-lei",day:1,time:"20:00",dur:20,cats:["quartieri"],icon:"🏙️",name:"Leicester Square",
+ lat:51.5103,lng:-0.1281,addr:"Leicester Square, London WC2H",q:"Leicester Square, London",wiki:"Leicester_Square",
+ desc:"Piazza dei cinema e delle prime cinematografiche, con luci, locali e statue nel giardino centrale.",
+ why:"Fulcro della vita serale del West End, vicinissima a Chinatown.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Seven Dials (~8 min, stima).",tips:["Nel giardino ci sono statue, tra cui Shakespeare e Charlie Chaplin (vicino alla piazza)."]},
+{id:"d1-chi",day:1,time:"20:30",dur:30,cats:["quartieri"],icon:"🏙️",name:"Chinatown",
+ lat:51.5113,lng:-0.1318,addr:"Gerrard Street, Chinatown, London W1D",q:"Chinatown, Gerrard Street, London",wiki:"Chinatown,_London",
+ desc:"Il quartiere cinese di Londra, con lanterne rosse, archi decorati e ristoranti.",
+ why:"Colori e lanterne molto fotogenici di sera.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Leicester Square (pochi minuti).",tips:["Entra da Wardour Street o Gerrard Street per l'arco principale."]},
+{id:"d1-pic",day:1,time:"21:00",dur:30,cats:["quartieri","monumenti"],icon:"🏙️",name:"Piccadilly Circus",
+ lat:51.5100,lng:-0.1347,addr:"Piccadilly Circus, London W1J",q:"Piccadilly Circus, London",wiki:"Piccadilly_Circus",
+ desc:"Incrocio famoso per i grandi schermi luminosi e per la fontana con la statua di Anteros (detta 'Eros').",
+ why:"Una delle immagini più riconoscibili della Londra notturna.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Chinatown (~7 min, stima).",tips:["Scorcio fotografico: dai gradini intorno alla fontana verso gli schermi."]},
+{id:"d1-reg",day:1,time:"21:30",dur:30,cats:["quartieri"],icon:"🏙️",name:"Regent Street",
+ lat:51.5105,lng:-0.1387,addr:"Regent Street, London W1B",q:"Regent Street, London",wiki:"Regent_Street",
+ site:"https://www.regentstreetonline.com/",
+ desc:"Elegante strada curva dell'epoca di John Nash, con grandi negozi; spesso ha luminarie stagionali.",
+ why:"Passeggiata scenografica tra Piccadilly e Soho.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Piccadilly Circus (pochi minuti).",tips:["Date di accensione delle luminarie natalizie: da verificare."]},
+{id:"d1-soh",day:1,time:"22:00",dur:60,cats:["quartieri"],icon:"🏙️",name:"Soho (pub o passeggiata libera)",
+ lat:51.5136,lng:-0.1311,addr:"Soho, London W1D",q:"Soho, London",wiki:"Soho",
+ desc:"Quartiere di locali, teatri e vicoli stretti: ottimo per un pub o una passeggiata senza programma.",
+ why:"Chiusura serale libera, come previsto.",
+ hours:["Orari dei locali non verificati: variano da pub a pub",0],price:["Dipende dal locale",1],book:["Non serve prenotare",1],
+ tr:"A piedi da Regent Street (~10 min, stima).",
+ tips:["Pub caratteristici (orari non verificati): The French House (Dean St), The Coach & Horses (Greek St), John Snow (Broadwick St)."]},
+{id:"d1-ret",day:1,time:"23:00",dur:0,cats:["hotel"],icon:"🛏️",name:"Rientro in hotel",
+ lat:51.5180,lng:-0.0752,addr:"70 Commercial Street, London E1 6LT",q:"70 Commercial Street, London E1 6LT",
+ desc:"Fine della serata.",why:"Rientro con i mezzi.",
+ hours:["Ultimi treni della metro: da verificare su TfL",0],price:["Contactless/Oyster: tariffe TfL",1],book:["—",1],
+ tr:"Da Soho: Central line da Tottenham Court Road a Liverpool Street (verifica ultimi treni), poi a piedi.",tips:[]},
+/* ---------------------------- GIORNO 2 ---------------------------- */
+{id:"d2-hotel",day:2,time:"09:00",dur:0,cats:["hotel"],icon:"🛏️",name:"Partenza dall'hotel",
+ lat:51.5180,lng:-0.0752,addr:"70 Commercial Street, London E1 6LT",q:"70 Commercial Street, London E1 6LT",
+ desc:"Colazione e partenza verso South Kensington.",why:"Per arrivare al museo all'apertura.",
+ hours:["Partenza indicativa 09:00",3],price:["—",3],book:["—",3],
+ tips:["Domenica: spesso ci sono lavori programmati sulla metropolitana. Controlla lo stato delle linee su tfl.gov.uk prima di partire."]},
+{id:"d2-nhm",day:2,time:"10:00",dur:135,cats:["musei"],icon:"🦕",name:"Natural History Museum",
+ lat:51.4967,lng:-0.1764,addr:"Natural History Museum, Cromwell Rd, London SW7 5BD",q:"Natural History Museum, Cromwell Road, London SW7 5BD",wiki:"Natural_History_Museum,_London",
+ site:"https://www.nhm.ac.uk/",
+ desc:"Uno dei musei più amati di Londra, in un edificio vittoriano di terracotta: dinosauri, minerali, fossili e grandi collezioni naturalistiche.",
+ why:"Tappa fondamentale: galleria dei dinosauri con il T-Rex animatronico, Hintze Hall e lo scheletro di balenottera azzurra.",
+ hours:["Aperto ogni giorno 10:00–17:50 (ultimo ingresso 17:30; un'altra pagina cita 17:20). Chiuso 24–26 dicembre. Orario del 1/11 da riconfermare il giorno stesso",2],
+ price:["Gallerie gratuite. Mostre temporanee ed eventi a pagamento (prezzi non verificati)",2],
+ book:["Non obbligatoria, ma consigliata: con biglietto gratuito prenotato si salta la coda. Nei weekend può esserci coda",2],
+ tr:"Dall'hotel: Circle line (diretta) da Liverpool Street a South Kensington, poi ~5–10 min a piedi (tunnel pedonale dalla stazione). Verifica sul planner.",
+ tips:["Metro più vicina: South Kensington (~5 min a piedi); alternativa Gloucester Road (~12 min).","Per vedere tutto servono 3–4 ore: con 2h15 scegli le priorità (Hintze Hall → Dinosauri).","Domenica più affollata: arriva alle 10:00."]},
+{id:"d2-brick",day:2,time:"13:15",dur:90,cats:["mercati","quartieri"],icon:"🛍️",name:"Brick Lane – Sunday Market e Upmarket",
+ lat:51.5217,lng:-0.0719,addr:"Sunday Upmarket, 91 Brick Lane, London E1 6QL",q:"Sunday Upmarket, 91 Brick Lane, London E1 6QL",wiki:"Brick_Lane",
+ desc:"La via della comunità bengalese e della street art: mercato domenicale con vintage, artigianato e street food internazionale all'Old Truman Brewery.",
+ why:"Pranzo tra bancarelle multietniche, negozi vintage e murales.",
+ hours:["Upmarket la domenica 10:00–18:00 (fonte non ufficiale); orari del mercato di strada da verificare",1],
+ price:["Ingresso libero; street food a pagamento (prezzi non verificati)",1],book:["Non serve prenotare",1],
+ tr:"Dal NHM: District line da South Kensington ad Aldgate East, poi ~10–15 min a piedi (verifica sul planner).",
+ tips:["Shoreditch High Street è la stazione più vicina (~250 m).","Beigel Bake (159 Brick Lane) è un bagel shop storico: orari non verificati.","Per la street art esplora i vicoli intorno (Fournier St, Hanbury St)."]},
+{id:"d2-tol",day:2,time:"15:15",dur:30,cats:["monumenti"],icon:"🏛️",name:"Tower of London (esterno)",
+ lat:51.5081,lng:-0.0759,addr:"Tower of London, London EC3N 4AB",q:"Tower of London, London EC3N 4AB",wiki:"Tower_of_London",
+ site:"https://www.hrp.org.uk/tower-of-london/",
+ desc:"Fortezza reale medievale, sito UNESCO affacciato sul Tamigi, dove sono custoditi i Gioielli della Corona.",
+ why:"Imponente anche solo dall'esterno, con le mura e il fossato.",
+ hours:["Orari dell'ingresso interno non verificati (pagina ufficiale non raggiungibile)",0],
+ price:["Prezzo dell'ingresso interno non verificato. Stansted Express: offerta 2FOR1 elencata (condizioni da verificare)",0],
+ book:["Visita interna non prevista; se la vuoi, prenota sul sito ufficiale",0],
+ tr:"Da Brick Lane: ~25–30 min a piedi, oppure District line da Aldgate East a Tower Hill (stima, da verificare).",
+ tips:["Foto classica dalla riva del Tamigi, lato Tower Wharf."]},
+{id:"d2-tb",day:2,time:"15:45",dur:60,cats:["monumenti","panorami"],icon:"🌉",name:"Tower Bridge",
+ lat:51.5055,lng:-0.0754,addr:"Tower Bridge, London SE1 2UP",q:"Tower Bridge, London SE1 2UP",wiki:"Tower_Bridge",
+ site:"https://www.towerbridge.org.uk/",
+ desc:"Il ponte levatoio vittoriano con le torri gotiche, simbolo di Londra: si attraversa gratis a piedi.",
+ why:"Luce del tardo pomeriggio e ponte illuminato dopo il tramonto.",
+ hours:["Passeggiata sul ponte: sempre libera. Tower Bridge Exhibition 09:30–18:00, ultimo ingresso 17:00 (fonte non ufficiale)",1],
+ price:["Exhibition: £18 adulto (fonte non ufficiale: confermare sul sito ufficiale). Passeggiata gratuita",1],
+ book:["Visita interna non prevista. Orari di sollevamento del ponte: towerbridge.org.uk/lift-times (da verificare)",0],
+ tr:"A piedi dalla Tower of London (~5 min).",
+ tips:["Tramonto il 1/11: circa 16:35 (calcolo astronomico, ±5 min).","Foto del ponte dalla riva sud (Potters Fields) o dal lato Tower Wharf."]},
+{id:"d2-stp",day:2,time:"17:15",dur:30,cats:["monumenti"],icon:"🏛️",name:"St Paul's Cathedral (esterno)",opt:true,
+ lat:51.5138,lng:-0.0984,addr:"St Paul's Cathedral, St Paul's Churchyard, London EC4M 8AD",q:"St Paul's Cathedral, London EC4M 8AD",wiki:"St_Paul's_Cathedral",
+ site:"https://www.stpauls.co.uk/",
+ desc:"Cattedrale barocca di Christopher Wren, con la grande cupola che domina il panorama della City.",
+ why:"Illuminata al buio è molto scenografica.",
+ hours:["Visite turistiche interne dal lunedì al sabato (ultimo ingresso ~16:00); la domenica non sono elencate. L'esterno è sempre visibile",2],
+ price:["Interno: £27 adulto (lunedì–sabato). Esterno gratuito",2],
+ book:["Interno: online o in loco. Esterno: no",2],
+ tr:"Da Tower Bridge: Tower Hill → Mansion House (Circle/District) e ~10 min a piedi, oppure ~40 min a piedi (stime, da verificare).",
+ tips:["Metro più vicina: St Paul's (Central line)."]},
+{id:"d2-mil",day:2,time:"17:45",dur:20,cats:["monumenti","panorami"],icon:"🌉",name:"Millennium Bridge",opt:true,
+ lat:51.5095,lng:-0.0985,addr:"Millennium Bridge, London",q:"Millennium Bridge, London",wiki:"Millennium_Bridge,_London",
+ desc:"Ponte pedonale in acciaio fra St Paul's e la Tate Modern, con la cupola della cattedrale in prospettiva.",
+ why:"Inquadratura iconica di St Paul's dal ponte.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da St Paul's (~5 min).",tips:[]},
+{id:"d2-ban",day:2,time:"18:05",dur:55,cats:["panorami"],icon:"🌉",name:"Passeggiata sul Tamigi – Bankside",opt:true,
+ lat:51.5076,lng:-0.0994,addr:"Bankside, London SE1",q:"Bankside, London",wiki:"Bankside",
+ desc:"Passeggiata sulla riva sud del Tamigi con la City illuminata di fronte; nei pressi Tate Modern e Shakespeare's Globe.",
+ why:"Chiusura serale tranquilla sul fiume.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi dal Millennium Bridge (pochi minuti).",tips:["Dopo il tramonto la riva è molto frequentata: tieni d'occhio i tuoi oggetti personali."]},
+/* ---------------------------- GIORNO 3 ---------------------------- */
+{id:"d3-hotel",day:3,time:"08:00",dur:0,cats:["hotel"],icon:"🛏️",name:"Check-out e partenza dall'hotel",
+ lat:51.5180,lng:-0.0752,addr:"70 Commercial Street, London E1 6LT",q:"70 Commercial Street, London E1 6LT",
+ desc:"Colazione, check-out e partenza verso Buckingham Palace.",why:"Per essere a Buckingham Palace alle 08:45.",
+ hours:["Orario di check-out e deposito bagagli: da verificare con l'hotel",0],price:["—",3],book:["—",3],
+ tips:["Chiedi se l'hotel custodisce i bagagli fino al pomeriggio (il piano prevede di riprenderli ~14:40)."]},
+{id:"d3-bp",day:3,time:"08:45",dur:30,cats:["monumenti"],icon:"🏛️",name:"Buckingham Palace",
+ lat:51.5014,lng:-0.1419,addr:"Buckingham Palace, London SW1A 1AA",q:"Buckingham Palace, London SW1A 1AA",wiki:"Buckingham_Palace",
+ desc:"Residenza londinese del sovrano, visibile dall'esterno: cancelli, Victoria Memorial e il viale The Mall.",
+ why:"Immagine simbolo della monarchia britannica.",
+ hours:["Esterno sempre visibile. Date/orari del cambio della guardia: da verificare sul sito ufficiale",0],
+ price:FREE,book:["Per l'esterno non serve prenotare",1],
+ tr:"Dall'hotel: Circle line (diretta) da Liverpool Street a St James's Park, poi ~15 min a piedi nel parco; partire entro le ~08:00 (stima, da verificare).",
+ tips:["Gli orari del cambio della guardia cambiano: non contarci senza verificarli."]},
+{id:"d3-sjp",day:3,time:"09:15",dur:30,cats:["panorami"],icon:"🌉",name:"St James's Park",
+ lat:51.5026,lng:-0.1340,addr:"St James's Park, London SW1A",q:"St James's Park, London",wiki:"St_James's_Park",
+ site:"https://www.royalparks.org.uk/visit/parks/st-jamess-park",
+ desc:"Il più antico dei parchi reali di Londra, con laghetto, pellicani e viste su Palazzo e Horse Guards.",
+ why:"Passeggiata verde fra Buckingham e Westminster.",
+ hours:["Orari di apertura del parco: da verificare su Royal Parks",0],price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi dal Palazzo (~5 min).",tips:["Dal ponte sul laghetto si vede London Eye e Horse Guards."]},
+{id:"d3-wa",day:3,time:"09:45",dur:30,cats:["monumenti"],icon:"🏛️",name:"Westminster Abbey (esterno)",
+ lat:51.4994,lng:-0.1273,addr:"Westminster Abbey, 20 Deans Yd, London SW1P 3PA",q:"Westminster Abbey, London SW1P 3PA",wiki:"Westminster_Abbey",
+ site:"https://www.westminster-abbey.org/visit-us/prices-and-entry-times",
+ desc:"Chiesa gotica dell'incoronazione dei sovrani britannici, dove riposano molte figure della storia.",
+ why:"La facciata nord e la porta occidentale sono fra gli scorci più fotografati.",
+ hours:["Pagina ufficiale: lunedì 26/10 ingresso 09:30–15:30. Orario del 2/11 non verificato; chiusure improvvise possibili",2],
+ price:["Interno: £32 adulto (£29 over 65/studenti)",2],
+ book:["Interno: online sul sito ufficiale. Offerta National Rail 2-for-1: non prenotabile in anticipo",2],
+ tr:"A piedi dal parco (~15 min, stima).",
+ tips:["Metro più vicina: Westminster (Jubilee, District, Circle)."]},
+{id:"d3-bb",day:3,time:"10:15",dur:25,cats:["monumenti","panorami"],icon:"🏛️",name:"Big Ben e Houses of Parliament",
+ lat:51.5007,lng:-0.1246,addr:"Palace of Westminster, London SW1A 0AA",q:"Elizabeth Tower Big Ben, London SW1A 0AA",wiki:"Big_Ben",
+ site:"https://www.parliament.uk/visit/",
+ desc:"La Elizabeth Tower (Big Ben) e il Palazzo di Westminster, sede del Parlamento, in stile neogotico.",
+ why:"Il monumento più rappresentativo di Londra.",
+ hours:["Esterno sempre visibile. Il campanone suona ad ogni ora",1],price:FREE,book:["Per l'esterno non serve prenotare",1],
+ tr:"A piedi dall'Abbazia (pochi minuti).",
+ tips:["Foto migliori da Westminster Bridge o dall'altro lato di Parliament Square."]},
+{id:"d3-eye",day:3,time:"10:40",dur:20,cats:["panorami"],icon:"🌉",name:"London Eye (vista da Westminster Bridge)",
+ lat:51.5010,lng:-0.1228,addr:"Westminster Bridge, London SE1 7",q:"Westminster Bridge, London",wiki:"London_Eye",
+ site:"https://www.londoneye.com/tickets-and-prices/",
+ desc:"Dal ponte si vede la grande ruota panoramica sulla riva sud con il Parlamento alle spalle.",
+ why:"Il London Eye è previsto solo come vista panoramica, non salita.",
+ hours:["Il 26/10 la pagina ufficiale indicava 10:00–20:30; orari del 2/11 non verificati",0],
+ price:["Salita: £29 adulto online (standard + Fast Track), £39 allo sportello. Stansted Express: 1/3 di sconto (condizioni da verificare)",2],
+ book:["Salita opzionale: prenota online (più economico)",2],
+ tr:"A piedi da Big Ben (~5 min).",tips:["La salita è opzionale e non è prevista nell'itinerario."]},
+{id:"d3-wh",day:3,time:"11:00",dur:15,cats:["monumenti"],icon:"🏛️",name:"Whitehall e Downing Street",
+ lat:51.5033,lng:-0.1267,addr:"Downing Street, Whitehall, London SW1A 2AA",q:"Downing Street, London SW1A 2AA",wiki:"Downing_Street",
+ desc:"Il viale dei ministeri. La via di Downing Street non è accessibile al pubblico: dal cancello su Whitehall si vede la porta del numero 10.",
+ why:"Passaggio obbligato verso Trafalgar Square, con Horse Guards lungo la strada.",
+ hours:["Accesso alla strada non consentito al pubblico; si vede dal cancello su Whitehall",1],price:FREE,book:["—",1],
+ tr:"A piedi lungo Whitehall (~10 min da Westminster Bridge, stima).",
+ tips:["Horse Guards (sentinelle a cavallo): orari del cambio da verificare."]},
+{id:"d3-traf",day:3,time:"11:15",dur:30,cats:["monumenti","quartieri"],icon:"🏛️",name:"Trafalgar Square",
+ lat:51.5080,lng:-0.1281,addr:"Trafalgar Square, London WC2N 5DN",q:"Trafalgar Square, London WC2N 5DN",wiki:"Trafalgar_Square",
+ desc:"Grande piazza con la Colonna di Nelson, le fontane e i leoni di bronzo, davanti alla National Gallery.",
+ why:"Ultima tappa monumentale prima di Camden.",
+ hours:OUT,price:FREE,book:["Non serve prenotare",1],
+ tr:"A piedi da Whitehall (~5 min).",tips:["La National Gallery è gratuita (orari non verificati), se avanza tempo."]},
+{id:"d3-cam",day:3,time:"12:00",dur:120,cats:["mercati","quartieri"],icon:"🛍️",name:"Camden Market e Camden Lock",
+ lat:51.5415,lng:-0.1466,addr:"Camden Lock Place, London NW1 8AF",q:"Camden Lock Market, Camden Lock Place, London NW1 8AF",wiki:"Camden_Market",
+ site:"https://camdenmarket.com/",
+ desc:"Quartiere alternativo con mercati di street food, vintage e artigianato attorno al Camden Lock sul Regent's Canal.",
+ why:"Pranzo, negozi alternativi e passeggiata sul canale.",
+ hours:["Mercato 10:00–19:00 ogni giorno; food hall 11:30–23:00; negozi lun–mer 12:00–18:00 (sito ufficiale; un avviso della pagina è datato: riconfermare)",2],
+ price:["Ingresso libero",2],book:["Non serve prenotare",1],
+ tr:"Da Trafalgar Square: Northern line da Charing Cross a Camden Town (~15 min) + ~10 min a piedi al Lock. Partire entro le 11:45 (stima, da verificare).",
+ tips:["Regent's Canal: passeggiata sull'alzaia se c'è tempo.","Lasciare Camden entro le 14:00 per recuperare i bagagli e arrivare in tempo a Liverpool Street."]},
+{id:"d3-bag",day:3,time:"14:40",dur:20,cats:["hotel"],icon:"🛏️",name:"Recupero bagagli in hotel",
+ lat:51.5180,lng:-0.0752,addr:"70 Commercial Street, London E1 6LT",q:"70 Commercial Street, London E1 6LT",
+ desc:"Ritiro dei bagagli e trasferimento a Liverpool Street.",why:"Passaggio obbligato prima del treno.",
+ hours:["Deposito bagagli dopo il check-out: da verificare con l'hotel",0],price:["—",3],book:["—",3],
+ tr:"Da Camden Town verso Liverpool Street/Aldgate: circa 35–40 min con i mezzi (stima, da verificare).",tips:[]},
+{id:"d3-lst",day:3,time:"15:20",dur:15,cats:["trasporti"],icon:"🚉",name:"Liverpool Street – Stansted Express",
+ lat:51.5178,lng:-0.0817,addr:"Liverpool Street Station, London EC2M 7PY",q:"Liverpool Street Station, London",wiki:"Liverpool_Street_station",
+ site:"https://www.stanstedexpress.com/",
+ desc:"Treno per Stansted nella fascia 15:30–16:00.",why:"Margine per ritardi, code e check-in.",
+ hours:["Orari dei treni da verificare sul sito il giorno stesso. Nessuna modifica programmata per il 2/11 (pagina consultata l'11/08/2026)",2],
+ price:["Compreso nel Duo Return",3],book:["—",3],
+ tr:"A piedi dall'hotel (pochi minuti, verifica su Maps).",
+ tips:["Duo Return: i due viaggiatori devono viaggiare insieme in entrambe le direzioni.","Il ritorno è valido entro un mese dall'andata (condizione ufficiale)."]},
+{id:"d3-stn",day:3,time:"17:00",dur:120,cats:["trasporti"],icon:"✈️",name:"Aeroporto di Stansted – volo delle 19:00",
+ lat:51.8860,lng:0.2389,addr:"London Stansted Airport, Stansted CM24 1QW",q:"London Stansted Airport",wiki:"London_Stansted_Airport",
+ site:"https://www.stanstedexpress.com/",
+ desc:"Arrivo in aeroporto per il volo di ritorno delle 19:00.",why:"Obiettivo: essere in aeroporto entro le 17:00.",
+ hours:["Decollo 19:00 (ora di Londra). Durata del treno ~45–50 min: da verificare",0],price:["—",3],book:["—",3],
+ tr:"Stansted Express da Liverpool Street (partenza 15:30–16:00).",
+ tips:["Controlla l'orario di chiusura del check-in/bagagli della tua compagnia (non verificato)."]}
+];
+
+/* =====================================================================
+   BIGLIETTI E PRENOTAZIONI
+   cat: booked | todo | free | opt | tbc
+   ===================================================================== */
+const TK_CATS = {
+  booked:{label:"Già prenotato",icon:"✅"}, todo:{label:"Da prenotare / verificare",icon:"📝"},
+  free:{label:"Gratuito senza prenotazione obbligatoria",icon:"🆓"}, opt:{label:"Opzionale (non previsto come visita interna)",icon:"💡"},
+  tbc:{label:"Non disponibile / da verificare",icon:"⚠️"}
+};
+const TICKETS = [
+{id:"t-hotel",cat:"booked",title:"Hotel – Private en-suite Room @ Liverpool Street, Brick Ln",
+ lines:["70 Commercial Street, London E1 6LT","Prenotato su Booking.com"],url:"https://www.booking.com/hotel/gb/private-en-suite-room-liverpool-street-brick-ln.html",label:"Apri su Booking",v:3},
+{id:"t-stex",cat:"booked",title:"Stansted Express – Duo Return",
+ lines:["2 adulti, andata e ritorno Stansted ↔ London Liverpool Street · pagato £75","Condizioni ufficiali: andata nel giorno prenotato, ritorno entro un mese; i due viaggiatori devono viaggiare insieme in entrambe le direzioni","Non cumulabile con Railcard o altre promozioni; non si può iniziare/interrompere/finire il viaggio in stazioni intermedie","Nessuna modifica programmata per il 31/10 e il 2/11 (pagina ufficiale dell'11/08/2026): ricontrolla il giorno prima"],
+ url:"https://www.stanstedexpress.com/",label:"Apri Stansted Express",v:2},
+{id:"t-nhm",cat:"todo",title:"Natural History Museum – ingresso gratuito",
+ lines:["Ingresso gratuito alle gallerie","Prenotazione dello slot: consigliata, non obbligatoria (si salta la coda con biglietto gratuito prenotato)","Visita pianificata domenica 1/11 alle 10:00"],
+ url:"https://www.nhm.ac.uk/",label:"Apri sito biglietti",v:2,when:{day:2,slot:"10:00"}},
+{id:"t-nhmx",cat:"todo",title:"Mostre speciali del Natural History Museum (opzionale)",
+ lines:["Solo se interessanti e compatibili con i tempi: sono a pagamento e con prenotazione","Elenco, date e prezzi: non verificati (controlla 'What's on' sul sito del museo)"],
+ url:"https://www.nhm.ac.uk/",label:"Apri sito biglietti",v:0},
+{id:"t-tb",cat:"opt",title:"Tower Bridge Exhibition",
+ lines:["Adulto £18 (fonte non ufficiale: da confermare)","Aperta 09:30–18:00, ultimo ingresso 17:00 (fonte non ufficiale)","Nel piano: solo passeggiata sul ponte, senza visita interna"],
+ url:"https://www.towerbridge.org.uk/",label:"Apri sito biglietti",v:1},
+{id:"t-tol",cat:"opt",title:"Tower of London",
+ lines:["Prezzo e orari dell'interno: non verificati (pagina ufficiale non raggiungibile)","Stansted Express: offerta 2FOR1 elencata sul sito ufficiale; condizioni complete su Days Out Guide (da verificare)","Nel piano: solo vista dall'esterno"],
+ url:"https://www.hrp.org.uk/tower-of-london/",label:"Apri sito biglietti",url2:"https://www.stanstedexpress.com/tickets-fares/offers/london-attraction-offers",label2:"Offerte Stansted Express",v:0},
+{id:"t-wa",cat:"opt",title:"Westminster Abbey",
+ lines:["Adulto £32; over 65 e studenti £29 (sito ufficiale, 26/10/2026)","Offerta National Rail 2-for-1: non prenotabile in anticipo","La chiesa può chiudere con poco preavviso. Orario del 2/11 non verificato","Nel piano: solo vista dall'esterno"],
+ url:"https://www.westminster-abbey.org/visit-us/prices-and-entry-times",label:"Apri sito biglietti",v:2},
+{id:"t-eye",cat:"opt",title:"London Eye",
+ lines:["Standard + Fast Track £29 online, £39 allo sportello (sito ufficiale, 26/10/2026)","Stansted Express: 1/3 di sconto elencato (condizioni da verificare)","Orari del 2/11 non verificati","Nel piano: solo vista panoramica"],
+ url:"https://www.londoneye.com/tickets-and-prices/",label:"Apri sito biglietti",v:2},
+{id:"t-stp",cat:"opt",title:"St Paul's Cathedral",
+ lines:["Visita turistica £27 adulto, lunedì–sabato (sito ufficiale, 26/10/2026)","Il sito elenca visite dal lunedì al sabato: domenica 1/11 solo esterno","Nel piano: solo vista dall'esterno"],
+ url:"https://www.stpauls.co.uk/",label:"Apri sito biglietti",v:2},
+{id:"t-free",cat:"free",title:"Esterni, piazze e mercati",
+ lines:["Covent Garden, Seven Dials, Leicester Square, Chinatown, Piccadilly Circus, Regent Street, Soho","Brick Lane e Upmarket, Tower of London (esterno), Tower Bridge (passeggiata), Millennium Bridge, Bankside","Buckingham Palace (esterno), St James's Park, Westminster Abbey (esterno), Big Ben, Whitehall, Trafalgar Square, Camden Market e Lock"],
+ v:1},
+{id:"t-nhm-free",cat:"free",title:"Natural History Museum – gallerie",
+ lines:["Ingresso gratuito; la prenotazione dello slot è consigliata (vedi sopra)"],v:2},
+{id:"t-guard",cat:"tbc",title:"Cambio della guardia a Buckingham Palace",lines:["Date e orari non verificati: dipendono dal calendario ufficiale"],v:0},
+{id:"t-dow",cat:"tbc",title:"Downing Street – accesso",lines:["La strada non è accessibile al pubblico: si vede la porta dal cancello su Whitehall"],v:1},
+{id:"t-bag",cat:"tbc",title:"Deposito bagagli dell'hotel",lines:["Da chiedere all'hotel: il piano prevede di recuperare i bagagli il 2/11 intorno alle 14:40"],v:0},
+{id:"t-lift",cat:"tbc",title:"Orari di sollevamento di Tower Bridge",lines:["Cambiano di continuo: da verificare sul sito ufficiale"],url:"https://www.towerbridge.org.uk/",label:"Apri sito",v:0},
+{id:"t-eta",cat:"tbc",title:"ETA britannica e documenti",lines:["Per i cittadini UE l'ETA (autorizzazione elettronica di viaggio) è richiesta per entrare nel Regno Unito: verifica requisiti, costi e tempi su gov.uk prima del volo","Porta con te il passaporto"],url:"https://www.gov.uk/eta",label:"Apri gov.uk/eta",v:0}
+];
+
+const WIKI_CREDIT = "Foto: Wikipedia / Wikimedia Commons (licenze varie)";
+const UNVERIFIED = [
+ "Durata e frequenza dello Stansted Express (indicati ~45–50 min come stima).",
+ "Orari e prezzo dell'ingresso interno alla Tower of London (pagina ufficiale non raggiungibile).",
+ "Prezzo/orari ufficiali di Tower Bridge Exhibition (trovati solo su fonte non ufficiale) e orari di sollevamento del ponte.",
+ "Orari di Westminster Abbey e London Eye per il 2 novembre.",
+ "Orari del mercato di strada di Brick Lane e orari dell'Upmarket (fonte non ufficiale).",
+ "Orari di check-in/check-out e deposito bagagli dell'hotel, e punto esatto sulla mappa.",
+ "Cambio della guardia a Buckingham Palace e orari di apertura di St James's Park.",
+ "Tempi di trasferimento con i mezzi (indicati come stime: usa Google Maps/TfL il giorno stesso).",
+ "Link ai siti ufficiali: quelli non consultati direttamente restano da riconfermare.",
+ "Ultimi treni della metro la sera del 31/10 e lavori programmati TfL nel weekend.",
+ "ETA britannica: requisiti e costi vanno verificati su gov.uk."
+];
+
+/* =====================================================================
+   NUCLEO: utilità, stato (localStorage), tempo, modello delle tappe
+   ===================================================================== */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const hm = m => pad(Math.floor(m/60)) + ":" + pad(m%60);
+const toMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t||""); return m ? (+m[1])*60 + (+m[2]) : 0; };
+
+/* ---------- Storage con fallback in memoria ---------- */
+const LS_KEY = "ltrip2026.v1", LS_WIKI = "ltrip2026.wiki", LS_WX = "ltrip2026.weather";
+const mem = {};
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return mem[k] ?? null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){ mem[k] = v; } },
+  del(k){ try { localStorage.removeItem(k); } catch(e){ delete mem[k]; } }
+};
+const defaultState = () => ({
+  v:1, theme:"auto", mode:"auto", travel:"walking", simNow:"",
+  edits:{}, custom:[], tk:{},
+  ui:{ view:"home", day:0, cat:"all", status:"all", favOnly:false, showRemoved:false, mapDay:0 }
+});
+let state = (() => {
+  try { const raw = store.get(LS_KEY); if (raw) { const s = JSON.parse(raw); return Object.assign(defaultState(), s, { ui:Object.assign(defaultState().ui, s.ui||{}) }); } } catch(e){}
+  return defaultState();
+})();
+function save(){ store.set(LS_KEY, JSON.stringify(state)); }
+
+let toastTimer;
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.remove("hidden");
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.add("hidden"), 2600);
+}
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); toast("Copiato negli appunti"); }
+  catch(e){
+    const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Copiato negli appunti"); } catch(_) { toast("Copia non riuscita: selezionalo a mano"); }
+    ta.remove();
+  }
+}
+
+/* ---------- Ora di Londra (con simulazione per prove) ---------- */
+function londonNow(){
+  const ov = new URLSearchParams(location.search).get("now") || state.simNow;
+  if (ov) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(ov);
+    if (m) return { date:`${m[1]}-${m[2]}-${m[3]}`, min:(+m[4])*60+(+m[5]), sec:0, ts:Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]), sim:true };
+  }
+  const p = {};
+  new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"})
+    .formatToParts(new Date()).forEach(x => p[x.type] = x.value);
+  return { date:`${p.year}-${p.month}-${p.day}`, min:(+p.hour)*60+(+p.minute), sec:+p.second, ts:Date.now(), sim:false };
+}
+function phase(now){
+  if (state.mode === "trip") return "trip";
+  if (now.date < TRIP.days[0].date) return "pre";
+  if (now.date > TRIP.days[2].date || now.ts > Date.parse(TRIP.takeoff)) return "post";
+  return "trip";
+}
+function tripDay(now){
+  const d = TRIP.days.find(x => x.date === now.date);
+  if (d) return d.n;
+  return now.date < TRIP.days[0].date ? 1 : 3;
+}
+/* Alba/tramonto (algoritmo NOAA semplificato, minuti UTC = ora di Londra in GMT; ±5 min) */
+function sunTimes(dateStr, lat=51.5074, lon=-0.1278){
+  const [y,m,d] = dateStr.split("-").map(Number), rad = Math.PI/180;
+  const N = Math.floor(275*m/9) - Math.floor((m+9)/12)*(1+Math.floor((y-4*Math.floor(y/4)+2)/3)) + d - 30, out = {};
+  for (const k of ["rise","set"]) {
+    const lng = lon/15, t = N + ((k==="rise"?6:18) - lng)/24, M = 0.9856*t - 3.289;
+    let L = M + 1.916*Math.sin(M*rad) + 0.020*Math.sin(2*M*rad) + 282.634; L = (L%360+360)%360;
+    let RA = Math.atan(0.91764*Math.tan(L*rad))/rad; RA = (RA%360+360)%360;
+    RA += Math.floor(L/90)*90 - Math.floor(RA/90)*90; RA /= 15;
+    const sinD = 0.39782*Math.sin(L*rad), cosD = Math.cos(Math.asin(sinD));
+    const cosH = (Math.cos(90.833*rad) - sinD*Math.sin(lat*rad)) / (cosD*Math.cos(lat*rad));
+    let H = (k==="rise" ? 360 - Math.acos(cosH)/rad : Math.acos(cosH)/rad)/15;
+    const T = H + RA - 0.06571*t - 6.622; out[k] = Math.round((((T - lng)%24)+24)%24*60);
+  }
+  return { rise:hm(out.rise), set:hm(out.set) };
+}
+
+/* ---------- Modello delle tappe (base + modifiche + luoghi aggiunti) ---------- */
+function allStops(){
+  const base = BASE_STOPS.map((s,i) => ({...s, ord:i*10, status:"todo"}));
+  const custom = state.custom.map((s,i) => ({ cats:["quartieri"], icon:"📍", dur:30, hours:["Da verificare",0], price:["Da verificare",0], book:["Da verificare",0], tips:[], ord:1000+i, status:"todo", custom:true, ...s }));
+  return base.concat(custom).map(s => {
+    const e = state.edits[s.id];
+    return { ...s, ...(e||{}), orig:{ day:s.day, time:s.time } };
+  });
+}
+const getStop = id => allStops().find(s => s.id === id);
+const dayStops = (day, withRemoved=false) =>
+  allStops().filter(s => s.day === day && (withRemoved || s.status !== "removed")).sort((a,b) => a.ord - b.ord || a.time.localeCompare(b.time));
+function setEdit(id, patch){ state.edits[id] = Object.assign({}, state.edits[id], patch); }
+function renumber(list){ list.forEach((s,i) => setEdit(s.id, { ord:i*10 })); }
+function placeByTime(id){
+  const s = getStop(id), list = dayStops(s.day, true).filter(x => x.id !== id);
+  let idx = list.findIndex(x => x.time > s.time); if (idx < 0) idx = list.length;
+  list.splice(idx, 0, s); renumber(list);
+}
+function moveStop(id, dir){
+  const s = getStop(id), list = dayStops(s.day, true);
+  const i = list.findIndex(x => x.id === id); let j = i + dir;
+  while (list[j] && list[j].status === "removed") j += dir;
+  if (!list[j]) return false;
+  [list[i], list[j]] = [list[j], list[i]]; renumber(list); return true;
+}
+function numbering(){ // numero della tappa dentro il suo giorno (stesso numero in timeline e mappa)
+  const map = {};
+  [1,2,3].forEach(d => dayStops(d).forEach((s,i) => map[s.id] = i+1));
+  return map;
+}
+function progress(){
+  const all = allStops().filter(s => s.status !== "removed" && (!s.opt || s.status === "done"));
+  const skipped = all.filter(s => s.status === "skipped").length;
+  const done = all.filter(s => s.status === "done").length, total = all.length - skipped;
+  return { done, total, skipped, pct: total ? Math.round(100*done/total) : 0 };
+}
+function nextStop(fromDay=1){
+  for (let d = fromDay; d <= 3; d++) {
+    const s = dayStops(d).find(x => x.status === "todo" && !(x.opt && false));
+    if (s) return s;
+  }
+  return null;
+}
+function prevStopOf(s){
+  const l = dayStops(s.day); const i = l.findIndex(x => x.id === s.id);
+  if (i > 0) return l[i-1];
+  if (s.day > 1) { const pl = dayStops(s.day-1); return pl[pl.length-1] || null; }
+  return null;
+}
+function followingStops(s, n=2){
+  const flat = [1,2,3].flatMap(d => dayStops(d));
+  const i = flat.findIndex(x => x.id === s.id);
+  return flat.slice(i+1).filter(x => x.status === "todo").slice(0,n);
+}
+const hasXY = s => typeof s.lat === "number" && typeof s.lng === "number" && !isNaN(s.lat) && !isNaN(s.lng);
+function km(a,b){
+  const r = Math.PI/180, dLat=(b.lat-a.lat)*r, dLng=(b.lng-a.lng)*r;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLng/2)**2;
+  return 6371*2*Math.asin(Math.sqrt(h));
+}
+function legEstimate(a,b){
+  if (!a || !b || !hasXY(a) || !hasXY(b)) return null;
+  const d = km(a,b), walk = Math.round(d*1.3/4.8*60);
+  return { km:d, walk, mode: walk <= 20 ? "walking" : "transit" };
+}
+
+/* ---------- URL ufficiali Google Maps (nessuna API key) ---------- */
+const mapsQ = s => s.q || (s.name + (s.addr ? ", " + s.addr : ", London"));
+const G = {
+  search: q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q),
+  dir: (dest, o={}) => {
+    let u = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest);
+    if (o.origin) u += "&origin=" + encodeURIComponent(o.origin);
+    if (o.wps && o.wps.length) u += "&waypoints=" + o.wps.map(encodeURIComponent).join("%7C");
+    return u + "&travelmode=" + (o.mode || "walking");
+  },
+  nearby: (s, what) => G.search(what + " near " + mapsQ(s))
+};
+/* Percorso del giorno a piedi: max 9 waypoint per link (limite di Google Maps), spezzato in segmenti */
+function daySegments(day){
+  const pts = dayStops(day).filter(s => s.status !== "skipped");
+  const segs = []; let start = 0;
+  while (start < pts.length - 1) {
+    const end = Math.min(start + 10, pts.length - 1), part = pts.slice(start, end + 1);
+    segs.push({ from:part[0], to:part[part.length-1], count:part.length,
+      url:G.dir(mapsQ(part[part.length-1]), { origin:mapsQ(part[0]), wps:part.slice(1,-1).map(mapsQ), mode:"walking" }) });
+    start = end;
+  }
+  return { pts, segs };
+}
+
+/* ---------- Foto autentiche da Wikipedia (con fallback offline) ---------- */
+let wikiCache = {}; try { wikiCache = JSON.parse(store.get(LS_WIKI) || "{}"); } catch(e){}
+async function wikiPhoto(title){
+  if (wikiCache[title]) return wikiCache[title];
+  try {
+    const r = await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title));
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(), u = j.thumbnail && j.thumbnail.source;
+    if (u) { wikiCache[title] = u; store.set(LS_WIKI, JSON.stringify(wikiCache)); return u; }
+  } catch(e){}
+  return null;
+}
+const photoHTML = s => s.wiki
+  ? `<div class="pw" data-wiki="${esc(s.wiki)}" data-alt="${esc(s.name)}"><div class="ph">${s.icon || "📍"}</div></div>`
+  : `<div class="ph">${s.icon || "📍"}</div>`;
+function hydratePhotos(root){
+  $$(".pw[data-wiki]", root).forEach(async el => {
+    if (el.dataset.done) return; el.dataset.done = "1";
+    const u = await wikiPhoto(el.dataset.wiki);
+    if (!u || !el.isConnected) return;
+    const img = new Image(); img.className = "photo"; img.alt = el.dataset.alt || ""; img.loading = "lazy";
+    img.onload = () => { if (el.isConnected) { el.innerHTML = ""; el.appendChild(img); } };
+    img.src = u;
+  });
+}
+
+/* ---------- Finestre (sheet) ---------- */
+let sheetRender = null;
+function drawSheet(){
+  const root = $("#sheet-root");
+  if (!sheetRender) { root.innerHTML = ""; return; }
+  const old = $(".sheet", root), st = old ? old.scrollTop : 0;
+  root.innerHTML = `<div class="sheet-bg" data-act="sheetbg"><div class="sheet" role="dialog" aria-modal="true">${sheetRender()}</div></div>`;
+  const sh = $(".sheet", root); if (sh) sh.scrollTop = st;
+  hydratePhotos(root);
+}
+function openSheet(fn){ sheetRender = fn; drawSheet(); }
+function closeSheet(){ sheetRender = null; drawSheet(); }
+
+/* =====================================================================
+   SCHERMATE
+   ===================================================================== */
+const DAY_HEX = ["", "#c8102e", "#1f5fd6", "#0e8f6a"];
+const dayInfo = n => TRIP.days[n-1];
+const vBadge = v => { const [c,l] = V_LABEL[v] ?? V_LABEL[0]; return `<span class="badge ${c}">${l}</span>`; };
+const fact = (label, arr) => arr ? `<div class="fact"><b>${label}</b>${esc(arr[0])} ${vBadge(arr[1])}</div>` : "";
+const catBadges = s => (s.cats||[]).map(c => `<span class="badge">${CATS[c] ? CATS[c].icon + " " + CATS[c].label : esc(c)}</span>`).join(" ");
+const modeIcon = m => m === "transit" ? "🚇" : "🚶";
+const navHref = (s, mode) => G.dir(mapsQ(s), { mode: mode || "walking" });
+function recMode(s){ const l = legEstimate(prevStopOf(s), s); return l ? l.mode : "transit"; }
+
+/* ---------- Avvisi prenotazioni (solo durante il viaggio) ---------- */
+function bookingAlerts(now){
+  if (phase(now) !== "trip") return [];
+  const d = dayInfo(tripDay(now)), out = [];
+  TICKETS.forEach(t => {
+    const st = state.tk[t.id] || {}, day = st.day || (t.when && t.when.day), slot = st.slot || (t.when && t.when.slot);
+    if (!slot || day !== d.n || t.cat === "booked") return;
+    const diff = toMin(slot) - now.min;
+    if (diff >= -10 && diff <= 90) out.push(`${t.title}: ${diff > 0 ? "tra " + diff + " min" : "ora"} (${slot})`);
+  });
+  return out;
+}
+function renderBanner(){
+  const al = bookingAlerts(londonNow());
+  $("#banner-slot").innerHTML = al.map(a => `<div class="alert">⏰ ${esc(a)}</div>`).join("");
+}
+
+/* ---------- Scheda tappa nella timeline ---------- */
+function stopCard(s, n, nextId, opts={}){
+  const cls = [s.status, s.id === nextId ? "next" : ""].join(" ");
+  const col = `var(--d${s.day})`;
+  const changed = s.orig && (s.orig.time !== s.time || s.orig.day !== s.day);
+  const doneBtn = s.status === "done"
+    ? `<button class="btn sm on" data-act="done" data-id="${s.id}">✓ Visitato</button>`
+    : `<button class="btn sm primary" data-act="done" data-id="${s.id}">✓ Segna come visitato</button>`;
+  return `<article class="stop ${cls}" id="st-${s.id}">
+    <div class="rail"><span class="num" style="--c:${col}">${s.status === "done" ? "✓" : n}</span></div>
+    <div class="body">
+      <div class="row"><span class="t">${esc(s.time)}</span><span class="muted small">${s.dur ? "· " + s.dur + " min" : ""}</span>
+        ${s.opt ? '<span class="badge info">Opzionale</span>' : ""}${s.fav ? '<span class="fav">★</span>' : ""}${changed ? '<span class="badge warn">Orario/giorno modificato</span>' : ""}
+        ${s.status === "skipped" ? '<span class="badge">Saltata</span>' : ""}${s.id === nextId ? '<span class="badge red">Prossima</span>' : ""}</div>
+      <h3>${s.icon} ${esc(s.name)}</h3>
+      <div class="addr">${esc(s.addr || "")}</div>
+      ${s.note ? `<p class="small" style="margin:6px 0 0">📝 ${esc(s.note)}</p>` : ""}
+      <div class="stop-actions">
+        ${s.status === "removed" ? `<button class="btn sm primary" data-act="restore" data-id="${s.id}">↩︎ Ripristina</button>${s.custom ? `<button class="btn sm" data-act="purge" data-id="${s.id}">Elimina definitivamente</button>` : ""}`
+        : `${doneBtn}<a class="btn sm" target="_blank" rel="noopener" href="${navHref(s, recMode(s))}">🧭 Naviga</a>
+           <button class="btn sm" data-act="detail" data-id="${s.id}">Dettagli</button>`}
+      </div>
+    </div></article>`;
+}
+function legRow(prev, cur){
+  const l = legEstimate(prev, cur);
+  const chip = l ? (l.mode === "walking" ? `<span>🚶 ~${l.walk} min a piedi (stima)</span>` : `<span>🚇 ~${l.km.toFixed(1)} km in linea d'aria: meglio i mezzi (tempo da verificare)</span>`) : "";
+  return (chip || cur.tr) ? `<div class="leg">${chip}${cur.tr ? `<span>${esc(cur.tr)}</span>` : ""}</div>` : "";
+}
+
+/* ---------- ITINERARIO ---------- */
+function viewItin(){
+  const u = state.ui, num = numbering(), now = londonNow(), ph = phase(now);
+  const nxt = ph === "pre" ? nextStop(1) : nextStop(tripDay(now));
+  const days = u.day ? [u.day] : [1,2,3];
+  const filtered = u.cat !== "all" || u.status !== "all" || u.favOnly;
+  const pass = s => (u.cat === "all" || (s.cats||[]).includes(u.cat)) && (u.status === "all" || (u.status === "done" ? s.status === "done" : s.status === "todo")) && (!u.favOnly || s.fav);
+  const chip = (act, key, val, label) => `<button class="chip ${String(u[key]) === String(val) ? "on" : ""}" data-act="${act}" data-val="${val}">${label}</button>`;
+  let html = `<h2 style="margin-top:8px">Itinerario</h2>
+    <div class="chips">${chip("fday","day",0,"Tutti i giorni")}${TRIP.days.map(d => chip("fday","day",d.n,"Giorno " + d.n)).join("")}</div>
+    <details class="card" ${filtered ? "open" : ""}><summary>Filtri ${filtered ? "(attivi)" : ""}</summary>
+      <div class="chips">${chip("fcat","cat","all","Tutte")}${Object.entries(CATS).filter(([k]) => k !== "hotel").map(([k,c]) => chip("fcat","cat",k,c.icon + " " + c.label)).join("")}</div>
+      <div class="chips">${chip("fstatus","status","all","Tutte")}${chip("fstatus","status","todo","Ancora da visitare")}${chip("fstatus","status","done","Già visitati")}
+        <button class="chip ${u.favOnly ? "on" : ""}" data-act="ffav">★ Preferiti</button></div></details>`;
+  days.forEach(n => {
+    const d = dayInfo(n), sun = sunTimes(d.date), list = dayStops(n), pd = list.filter(s => s.status === "done").length;
+    html += `<div class="day-head"><span class="day-dot" style="background:var(--d${n})"></span><div class="grow"><h2 style="margin:0">${d.label}</h2><div class="muted small">${d.theme} · alba ${sun.rise} · tramonto ${sun.set} (stima)</div></div></div>
+      <div class="row" style="margin:6px 0"><span class="badge">${pd}/${list.length} fatte</span>
+        <button class="btn sm" data-act="route" data-day="${n}">🗺️ Itinerario del giorno in Google Maps</button></div><div class="tl">`;
+    let prev = null, shown = 0;
+    list.forEach(s => {
+      if (!pass(s)) return;
+      if (!filtered && prev) html += legRow(prev, s);
+      html += stopCard(s, num[s.id], nxt && nxt.id, {}); prev = s; shown++;
+    });
+    if (!shown) html += `<p class="muted">Nessuna tappa con questi filtri.</p>`;
+    html += `</div>`;
+    const removed = dayStops(n, true).filter(s => s.status === "removed");
+    if (u.showRemoved && removed.length) html += `<h3 style="margin:14px 0 6px">Tappe eliminate (giorno ${n})</h3><div class="tl">${removed.map(s => stopCard(s, "–", null)).join("")}</div>`;
+  });
+  const nRemoved = allStops().filter(s => s.status === "removed").length;
+  html += `<div class="row" style="margin:18px 0">
+    <button class="btn primary" data-act="addplace">➕ Aggiungi un luogo</button>
+    <button class="btn" data-act="toggleremoved">${u.showRemoved ? "Nascondi" : "Mostra"} eliminate (${nRemoved})</button>
+    <button class="btn" data-act="print">🖨️ Stampa / PDF</button></div>
+    <p class="muted small">Le distanze a piedi sono stime calcolate in linea d'aria (×1,3) e non dati in tempo reale: per i tempi reali usa "Naviga".</p>`;
+  return html;
+}
+
+/* ---------- DETTAGLIO TAPPA ---------- */
+function detailSheet(id){
+  const s = getStop(id); if (!s) return "";
+  const num = numbering()[id], coords = hasXY(s) ? `${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}` : "non impostate";
+  const near = [["Caffè","coffee"],["Pub","pub"],["Bagni pubblici","public toilet"],["Farmacia","pharmacy"],["Bancomat","ATM"]];
+  const next = followingStops(s, 1)[0];
+  return `<div class="top"><div class="muted small">Giorno ${s.day} · tappa ${num || "–"} · ${dayInfo(s.day).label}</div><button class="btn sm" data-act="close">✕ Chiudi</button></div>
+    ${photoHTML(s)}<div class="credit">${s.wiki ? WIKI_CREDIT : ""}</div>
+    <h2 style="margin-top:12px">${s.icon} ${esc(s.name)}</h2>
+    <div class="chips">${catBadges(s)}${s.opt ? '<span class="badge info">Opzionale</span>' : ""}</div>
+    <p>${esc(s.desc || "")}</p>${s.why ? `<p><b>Perché vale la pena:</b> ${esc(s.why)}</p>` : ""}
+    <div class="facts">
+      <div class="fact"><b>Nel nostro itinerario</b>${esc(s.time)}${s.dur ? " · circa " + s.dur + " min" : ""}</div>
+      ${fact("Orari di apertura", s.hours)}${fact("Prezzo d'ingresso", s.price)}${fact("Prenotazione", s.book)}
+      <div class="fact"><b>Indirizzo</b>${esc(s.addr || "—")}</div>
+      <div class="fact"><b>Coordinate (approssimative)</b>${coords}</div>
+      ${s.tr ? `<div class="fact"><b>Dalla tappa precedente</b>${esc(s.tr)}</div>` : ""}
+      ${(s.tips||[]).length ? `<div class="fact"><b>Consigli pratici</b><ul style="margin:4px 0 0;padding-left:18px">${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+    </div>
+    <div class="row">
+      <a class="btn primary" target="_blank" rel="noopener" href="${G.search(mapsQ(s))}">📍 Apri in Google Maps</a>
+      <a class="btn" target="_blank" rel="noopener" href="${navHref(s,"walking")}">🚶 Percorso a piedi</a>
+      <a class="btn" target="_blank" rel="noopener" href="${navHref(s,"transit")}">🚇 Mezzi pubblici</a>
+      ${next ? `<a class="btn" target="_blank" rel="noopener" href="${G.dir(mapsQ(next),{origin:mapsQ(s),mode:state.travel})}">➡️ Indicazioni da qui a "${esc(next.name.slice(0,22))}"</a>` : ""}
+      ${s.site ? `<a class="btn" target="_blank" rel="noopener" href="${esc(s.site)}">🔗 Sito ufficiale</a>` : ""}
+      <button class="btn" data-act="copy" data-text="${esc(s.addr || s.name)}">📋 Copia indirizzo</button>
+      ${hasXY(s) ? `<button class="btn" data-act="gomap" data-id="${s.id}">🗺️ Vedi sulla mappa</button>` : ""}
+    </div>
+    <label class="f">Cerca nelle vicinanze (Google Maps)</label>
+    <div class="chips">${near.map(([l,w]) => `<a class="chip" target="_blank" rel="noopener" href="${G.nearby(s,w)}" style="text-decoration:none;color:inherit">${l}</a>`).join("")}</div>
+    <h3 style="margin-top:18px">Gestisci la tappa</h3>
+    <div class="row" style="margin:8px 0">
+      <button class="btn ${s.status === "done" ? "on" : "primary"}" data-act="done" data-id="${s.id}">${s.status === "done" ? "✓ Visitato (tocca per annullare)" : "✓ Segna come visitato"}</button>
+      <button class="btn" data-act="skip" data-id="${s.id}">${s.status === "skipped" ? "↩︎ Non saltare" : "⏭ Salta"}</button>
+      <button class="btn" data-act="fav" data-id="${s.id}">${s.fav ? "★ Preferito" : "☆ Preferito"}</button>
+      <button class="btn" data-act="remove" data-id="${s.id}">🗑 Elimina (si può ripristinare)</button>
+    </div>
+    <div class="row">
+      <div class="grow"><label class="f">Orario</label><input type="time" value="${esc(s.time)}" data-chg="time" data-id="${s.id}"></div>
+      <div class="grow"><label class="f">Giorno</label><select data-chg="day" data-id="${s.id}">${TRIP.days.map(d => `<option value="${d.n}" ${d.n === s.day ? "selected" : ""}>${d.label}</option>`).join("")}</select></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sm" data-act="move" data-id="${s.id}" data-dir="-1">⬆️ Sposta prima</button>
+      <button class="btn sm" data-act="move" data-id="${s.id}" data-dir="1">⬇️ Sposta dopo</button>
+      ${s.orig && (s.orig.time !== s.time || s.orig.day !== s.day) ? `<button class="btn sm" data-act="resettime" data-id="${s.id}">Ripristina orario originale (${esc(s.orig.time)})</button>` : ""}
+    </div>
+    <label class="f">Note personali (salvate solo su questo dispositivo)</label>
+    <textarea data-chg="note" data-id="${s.id}" placeholder="Es. provare il bagel, foto dal ponte…">${esc(s.note || "")}</textarea>`;
+}
+
+/* ---------- Aggiungi luogo ---------- */
+function addPlaceSheet(){
+  return `<div class="top"><h3>Aggiungi un luogo</h3><button class="btn sm" data-act="close">✕ Chiudi</button></div>
+    <label class="f">Nome *</label><input type="text" id="ap-name" placeholder="Es. Borough Market">
+    <label class="f">Indirizzo (facoltativo ma utile)</label><input type="text" id="ap-addr" placeholder="Es. 8 Southwark St, London SE1 1TL">
+    <div class="row"><div class="grow"><label class="f">Giorno</label><select id="ap-day">${TRIP.days.map(d => `<option value="${d.n}" ${d.n === (state.ui.day || 1) ? "selected" : ""}>${d.label}</option>`).join("")}</select></div>
+      <div class="grow"><label class="f">Orario</label><input type="time" id="ap-time" value="12:00"></div></div>
+    <label class="f">Categoria</label><select id="ap-cat">${Object.entries(CATS).filter(([k]) => k !== "hotel").map(([k,c]) => `<option value="${k}">${c.icon} ${c.label}</option>`).join("")}</select>
+    <div class="row"><div class="grow"><label class="f">Latitudine (facoltativa)</label><input type="text" id="ap-lat" inputmode="decimal" placeholder="51.5055"></div>
+      <div class="grow"><label class="f">Longitudine (facoltativa)</label><input type="text" id="ap-lng" inputmode="decimal" placeholder="-0.0754"></div></div>
+    <div class="row" style="margin:8px 0"><button class="btn" data-act="geocode">🔎 Cerca coordinate (OpenStreetMap)</button></div>
+    <p class="muted small">Senza coordinate il luogo compare in elenco e con il link Google Maps, ma non sulla mappa. Le coordinate si possono anche copiare da Google Maps (tieni premuto sul punto).</p>
+    <button class="btn primary big" data-act="saveplace">Salva luogo</button>`;
+}
+async function geocodeForm(){
+  const name = $("#ap-name").value.trim(), addr = $("#ap-addr").value.trim();
+  if (!name && !addr) { toast("Inserisci almeno un nome o un indirizzo"); return; }
+  toast("Cerco…");
+  try {
+    const q = (addr || name) + ", London, UK";
+    const r = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=it&q=" + encodeURIComponent(q));
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    if (!j.length) { toast("Nessun risultato: inserisci le coordinate a mano"); return; }
+    $("#ap-lat").value = (+j[0].lat).toFixed(5); $("#ap-lng").value = (+j[0].lon).toFixed(5); toast("Coordinate trovate");
+  } catch(e){ toast("Ricerca non disponibile (offline?). Inserisci le coordinate a mano."); }
+}
+function savePlace(){
+  const name = $("#ap-name").value.trim(); if (!name) { toast("Il nome è obbligatorio"); return; }
+  const addr = $("#ap-addr").value.trim(), cat = $("#ap-cat").value;
+  const lat = parseFloat($("#ap-lat").value.replace(",", ".")), lng = parseFloat($("#ap-lng").value.replace(",", "."));
+  const s = { id:"c" + Date.now().toString(36), day:+$("#ap-day").value, time:$("#ap-time").value || "12:00", name, addr, cats:[cat], icon:CATS[cat].icon,
+    q: name + (addr ? ", " + addr : ", London"), desc:"Luogo aggiunto da te.", why:"" };
+  if (!isNaN(lat) && !isNaN(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) { s.lat = lat; s.lng = lng; }
+  state.custom.push(s); save(); placeByTime(s.id); save();
+  closeSheet(); toast("Luogo aggiunto"); renderAll();
+}
+
+/* ---------- Itinerario del giorno su Google Maps ---------- */
+function routeSheet(day){
+  const { pts, segs } = daySegments(day), d = dayInfo(day);
+  const legs = []; for (let i = 0; i < pts.length - 1; i++) legs.push([pts[i], pts[i+1]]);
+  return `<div class="top"><h3>${d.label}</h3><button class="btn sm" data-act="close">✕ Chiudi</button></div>
+    <p class="muted small">Google Maps accetta fino a 9 tappe intermedie per link: se il giorno ne ha di più, il percorso è diviso in tratti (il secondo parte dove finisce il primo).</p>
+    <h3>🚶 Percorso a piedi con tutte le tappe</h3>
+    <div class="row" style="margin:8px 0">${segs.map((sg,i) => `<a class="btn primary" target="_blank" rel="noopener" href="${sg.url}">Tratto ${i+1}/${segs.length}: ${esc(sg.from.name.slice(0,18))} → ${esc(sg.to.name.slice(0,18))}</a>`).join("") || "<span class='muted'>Servono almeno due tappe.</span>"}</div>
+    <h3 style="margin-top:16px">🚇 Con i mezzi pubblici</h3>
+    <p class="muted small">Con i mezzi Google Maps non supporta tappe intermedie: una tratta alla volta.</p>
+    <div class="row">${legs.map(([a,b]) => `<a class="btn sm" target="_blank" rel="noopener" href="${G.dir(mapsQ(b),{origin:mapsQ(a),mode:"transit"})}">${esc(a.name.slice(0,16))} → ${esc(b.name.slice(0,16))}</a>`).join("")}</div>`;
+}
+
+/* ---------- HOME ---------- */
+function nextCard(s, big=false){
+  if (!s) return `<div class="card"><b>Nessuna tappa da fare.</b><p class="muted">Hai completato o saltato tutto: bel lavoro!</p></div>`;
+  const mode = recMode(s), l = legEstimate(prevStopOf(s), s);
+  return `<div class="card"><div class="row"><span class="badge red">Prossima tappa</span><span class="t" style="font-weight:800;color:var(--accent)">${esc(s.time)}</span><span class="muted small">${dayInfo(s.day).label}</span></div>
+    <h2 style="margin:8px 0 4px">${s.icon} ${esc(s.name)}</h2><div class="muted small">${esc(s.addr || "")}</div>
+    <div style="margin:10px 0">${photoHTML(s)}</div>
+    ${big ? `<p class="small">Trasporto consigliato: <b>${modeIcon(mode)} ${mode === "walking" ? "a piedi" : "mezzi pubblici"}</b>${l ? ` (${l.mode === "walking" ? "~" + l.walk + " min, stima" : "tempo da verificare"} dalla tappa precedente)` : ""}</p>
+      <a class="btn primary big" target="_blank" rel="noopener" href="${navHref(s, mode)}">🧭 Portami lì</a>`
+    : `<div class="row"><a class="btn primary" target="_blank" rel="noopener" href="${navHref(s, mode)}">🧭 Naviga</a>
+      <button class="btn" data-act="done" data-id="${s.id}">✓ Segna come visitato</button><button class="btn ghost" data-act="detail" data-id="${s.id}">Dettagli</button></div>`}
+    ${big ? `<div class="row" style="margin-top:10px"><button class="btn" data-act="done" data-id="${s.id}">✓ Fatto</button><button class="btn" data-act="skip" data-id="${s.id}">⏭ Salta</button><button class="btn ghost" data-act="detail" data-id="${s.id}">Dettagli</button></div>` : ""}</div>`;
+}
+function todoTickets(){ return TICKETS.filter(t => t.cat === "todo" && !(state.tk[t.id] && state.tk[t.id].chk)); }
+function viewHome(){
+  const now = londonNow(), ph = phase(now), pr = progress(), todo = todoTickets();
+  const dayNo = tripDay(now), d = dayInfo(dayNo);
+  let html = "";
+  if (ph === "pre") {
+    html += `<div class="hero"><h1>London Trip 2026</h1><p>31 ottobre – 2 novembre 2026 · 3 giorni · 2 adulti</p>
+      <p>Atterraggio a Stansted: sabato 31 ottobre, 15:30 ora di Londra (16:30 in Italia)</p>
+      <div class="count"><div><b id="cd-d">0</b><span>giorni</span></div><div><b id="cd-h">0</b><span>ore</span></div><div><b id="cd-m">0</b><span>min</span></div><div><b id="cd-s">0</b><span>sec</span></div></div></div>`;
+  } else if (ph === "trip") {
+    html += `<div class="hero"><h1>Giorno ${dayNo} · ${d.label}</h1><p>${d.theme}</p><div class="clock" id="clk">--:--</div><p>ora locale a Londra</p></div>`;
+  } else {
+    html += `<div class="hero"><h1>Viaggio concluso</h1><p>London Trip 2026 · 31 ottobre – 2 novembre</p><p>${pr.done} tappe completate su ${pr.total}${pr.skipped ? " (" + pr.skipped + " saltate)" : ""}</p></div>`;
+  }
+  const al = bookingAlerts(now);
+  if (al.length) html += al.map(a => `<div class="alert">⏰ ${esc(a)}</div>`).join("");
+  html += `<div class="card"><div class="row"><b class="grow">Avanzamento dell'itinerario</b><span class="muted small">${pr.done}/${pr.total} · ${pr.pct}%</span></div>
+    <div class="progress" style="margin-top:8px"><i style="width:${pr.pct}%"></i></div></div>`;
+  if (ph === "post") {
+    html += `<h2>Riepilogo tappe</h2>` + [1,2,3].map(n => {
+      const l = dayStops(n); return `<div class="card"><b>${dayInfo(n).label}</b><ul style="margin:6px 0 0;padding-left:18px">${l.map(s => `<li>${s.status === "done" ? "✅" : s.status === "skipped" ? "⏭" : "▫️"} ${esc(s.name)}</li>`).join("")}</ul></div>`;
+    }).join("");
+  } else {
+    const nxt = ph === "pre" ? nextStop(1) : nextStop(dayNo);
+    html += nextCard(nxt, ph === "trip");
+    if (ph === "trip" && nxt) {
+      const more = followingStops(nxt, 2);
+      if (more.length) html += `<div class="card"><b>Prossime due tappe</b>${more.map(s => `<div class="row" style="margin-top:8px"><span class="t" style="font-weight:800;color:var(--accent)">${esc(s.time)}</span><span class="grow">${s.icon} ${esc(s.name)}</span><button class="btn sm" data-act="detail" data-id="${s.id}">Dettagli</button></div>`).join("")}</div>`;
+      html += `<h2>Programma di oggi</h2><div class="card">${dayStops(dayNo).map(s => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)">
+        <input type="checkbox" ${s.status === "done" ? "checked" : ""} data-chg="donechk" data-id="${s.id}" aria-label="Visitato">
+        <span class="t" style="font-weight:800;color:var(--accent)">${esc(s.time)}</span>
+        <span class="grow" style="${s.status === "done" ? "text-decoration:line-through;opacity:.6" : ""}">${s.icon} ${esc(s.name)}</span>
+        <button class="btn sm ghost" data-act="detail" data-id="${s.id}">›</button></div>`).join("")}</div>`;
+    }
+  }
+  if (ph !== "post") {
+    html += `<h2>Prenotazioni ancora da effettuare</h2>`;
+    html += todo.length ? todo.map(t => `<div class="card tk"><h3>${TK_CATS.todo.icon} ${esc(t.title)}</h3><p class="small muted" style="margin:6px 0">${esc(t.lines[0])}</p>
+      <div class="row">${t.url ? `<a class="btn sm" target="_blank" rel="noopener" href="${t.url}">${esc(t.label || "Apri sito")}</a>` : ""}<button class="btn sm" data-act="tkdone" data-id="${t.id}">Segna come prenotato</button></div></div>`).join("")
+      : `<div class="card">✅ Niente da prenotare. Hotel e Stansted Express sono già a posto.</div>`;
+    html += `<div class="card"><b>Meteo previsto</b><div id="wx-home" class="muted small" style="margin-top:6px">Caricamento…</div></div>`;
+  }
+  return html;
+}
+function tick(){
+  const now = londonNow(), ph = phase(now);
+  const clk = $("#clk"); if (clk) clk.textContent = `${pad(Math.floor(now.min/60))}:${pad(now.min%60)}:${pad(now.sec)}`;
+  const cd = $("#cd-d");
+  if (cd) {
+    let diff = Math.max(0, Math.floor((Date.parse(TRIP.landing) - now.ts)/1000));
+    $("#cd-d").textContent = Math.floor(diff/86400); $("#cd-h").textContent = Math.floor(diff%86400/3600);
+    $("#cd-m").textContent = Math.floor(diff%3600/60); $("#cd-s").textContent = diff%60;
+    if (diff === 0 && ph !== "pre") renderAll();
+  }
+}
+
+/* ---------- MAPPA ---------- */
+let map = null, mapLayer = null, markerById = {}, tileWarned = false;
+function mapStructure(){
+  const root = $("#map-root");
+  if (!$("#map", root)) root.innerHTML = `<div id="map-bar"></div><div id="map"></div><div id="map-legend" class="legend"></div>`;
+}
+function ensureMap(){
+  if (map) return true;
+  if (window.__noLeaflet || typeof L === "undefined") return false;
+  const el = $("#map"); if (!el) return false;
+  map = L.map(el, { zoomControl:true }).setView([51.5074,-0.1278], 12);
+  const tl = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"&copy; OpenStreetMap contributors" }).addTo(map);
+  tl.on("tileerror", () => { if (!tileWarned) { tileWarned = true; toast("Alcune parti della mappa non si caricano (connessione assente?)"); } });
+  mapLayer = L.layerGroup().addTo(map);
+  map.on("popupopen", e => hydratePhotos(e.popup.getElement()));
+  return true;
+}
+function popupHTML(id){
+  const s = getStop(id), n = numbering()[id], next = followingStops(s, 1)[0];
+  return `<div class="pop">${photoHTML(s)}<h4>${s.icon} ${esc(s.name)}</h4>
+    <div class="small" style="opacity:.7">Giorno ${s.day} · tappa ${n} · ${esc(s.time)}</div><p class="small" style="margin:6px 0 0">${esc(s.desc || "")}</p>
+    <div class="btns"><a class="btn primary" target="_blank" rel="noopener" href="${G.search(mapsQ(s))}">📍 Apri in Google Maps</a>
+    <a class="btn" target="_blank" rel="noopener" href="${navHref(s, state.travel)}">🧭 Portami qui</a>
+    ${next ? `<a class="btn" target="_blank" rel="noopener" href="${G.dir(mapsQ(next),{origin:mapsQ(s),mode:state.travel})}">➡️ Indicazioni da qui</a>
+    <button class="btn" data-act="mapnext" data-id="${s.id}">⏭ Vai alla tappa successiva</button>` : ""}
+    <button class="btn" data-act="detail" data-id="${s.id}">Dettagli</button></div></div>`;
+}
+function renderMap(){
+  mapStructure();
+  const u = state.ui, chip = (v,l) => `<button class="chip ${u.mapDay === v ? "on" : ""}" data-act="mapday" data-val="${v}">${l}</button>`;
+  $("#map-bar").innerHTML = `<h2 style="margin:8px 0">Mappa</h2><div class="chips">${chip(0,"Tutti")}${TRIP.days.map(d => chip(d.n,"Giorno " + d.n)).join("")}
+    <span style="flex:1"></span><button class="chip ${state.travel === "walking" ? "on" : ""}" data-act="travel" data-val="walking">🚶 A piedi</button>
+    <button class="chip ${state.travel === "transit" ? "on" : ""}" data-act="travel" data-val="transit">🚇 Mezzi</button></div>
+    <div class="row" style="margin-bottom:6px"><button class="btn sm" data-act="route" data-day="${u.mapDay || 1}">🗺️ Apri itinerario del giorno ${u.mapDay || 1} in Google Maps</button></div>`;
+  $("#map-legend").innerHTML = TRIP.days.map(d => `<span><i style="background:var(--d${d.n})"></i>Giorno ${d.n}</span>`).join("") +
+    `<span>✈️ aeroporto · 🛏️ hotel · 🚉 stazioni · 🏛️ monumenti · 🛍️ mercati</span><span>Linea tratteggiata = ordine di visita (non il percorso reale)</span>`;
+  if (!ensureMap()) {
+    $("#map").outerHTML = `<div id="map" style="height:auto;min-height:0;padding:12px" class="card"><b>Mappa non disponibile</b><p class="muted small">Impossibile caricare la mappa (serve Internet). I link a Google Maps funzionano comunque:</p>
+      ${[1,2,3].map(n => `<b>${dayInfo(n).label}</b><div class="chips">${dayStops(n).map(s => `<a class="chip" target="_blank" rel="noopener" style="text-decoration:none;color:inherit" href="${G.search(mapsQ(s))}">${s.icon} ${esc(s.name)}</a>`).join("")}</div>`).join("")}</div>`;
+    return;
+  }
+  updateMap(true);
+}
+function updateMap(fit){
+  if (!map) return;
+  mapLayer.clearLayers(); markerById = {};
+  const num = numbering(), days = state.ui.mapDay ? [state.ui.mapDay] : [1,2,3], pts = [], seen = {};
+  days.forEach(d => {
+    const line = [];
+    dayStops(d).forEach(s => {
+      if (!hasXY(s) || s.status === "skipped") return;
+      const key = s.lat.toFixed(4) + "," + s.lng.toFixed(4), k = seen[key] = (seen[key] ?? -1) + 1;
+      const pos = [s.lat + k*0.00011, s.lng + k*0.00011];
+      line.push(pos); pts.push(pos);
+      const m = L.marker(pos, { title:s.name, icon:L.divIcon({ className:"", iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-18],
+        html:`<div class="mk ${s.status === "done" ? "done" : ""}" style="background:var(--d${d})">${num[s.id]}<i>${s.icon}</i></div>` }) });
+      m.bindPopup(() => popupHTML(s.id), { maxWidth:260 }); m.addTo(mapLayer); markerById[s.id] = m;
+    });
+    if (line.length > 1) L.polyline(line, { color:DAY_HEX[d], weight:3, opacity:.7, dashArray:"6 8" }).addTo(mapLayer);
+  });
+  if (fit && pts.length) map.fitBounds(pts, { padding:[30,30], maxZoom:15 });
+}
+
+/* ---------- BIGLIETTI ---------- */
+function viewTickets(){
+  let html = `<h2 style="margin-top:8px">Biglietti e prenotazioni</h2>
+    <p class="muted small">Ultima verifica: ${LAST_CHECK}. Disponibilità in tempo reale non verificabile da qui: controlla sempre il sito ufficiale prima di prenotare. Il codice di prenotazione resta <b>solo su questo dispositivo</b> (non viene inviato a nessuno): evita di scrivere dati di carte o documenti.</p>`;
+  ["booked","todo","free","opt","tbc"].forEach((cat, i) => {
+    const items = TICKETS.filter(t => t.cat === cat); if (!items.length) return;
+    html += `<div class="sec-title"><h2 style="margin:0">${i+1}. ${TK_CATS[cat].icon} ${TK_CATS[cat].label}</h2></div>`;
+    items.forEach(t => {
+      const st = state.tk[t.id] || {}, booked = cat === "booked" || !!st.chk, editable = cat === "todo" || cat === "opt";
+      const day = st.day || (t.when && t.when.day) || "", slot = st.slot || (t.when && t.when.slot) || "";
+      html += `<div class="card tk"><h3>${esc(t.title)} ${booked ? '<span class="badge ok">Prenotato</span>' : ""} ${vBadge(t.v)}</h3>
+        <ul>${t.lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+        <div class="row" style="margin-top:10px">${t.url ? `<a class="btn sm" target="_blank" rel="noopener" href="${t.url}">🔗 ${esc(t.label || "Apri sito biglietti")}</a>` : ""}
+          ${t.url2 ? `<a class="btn sm" target="_blank" rel="noopener" href="${t.url2}">🔗 ${esc(t.label2)}</a>` : ""}</div>
+        ${editable ? `<label class="row" style="margin-top:10px;gap:10px"><input type="checkbox" data-chg="tkchk" data-id="${t.id}" ${st.chk ? "checked" : ""}> <b>Prenotato</b></label>
+          <div class="row"><div class="grow"><label class="f">Giorno della visita</label><select data-chg="tkday" data-id="${t.id}"><option value="">—</option>${TRIP.days.map(d => `<option value="${d.n}" ${d.n === day ? "selected" : ""}>${d.label}</option>`).join("")}</select></div>
+          <div class="grow"><label class="f">Orario prenotato (per l'avviso)</label><input type="time" value="${esc(slot)}" data-chg="tkslot" data-id="${t.id}"></div></div>` : ""}
+        ${cat === "booked" || editable ? `<label class="f">Codice prenotazione (solo su questo dispositivo)</label><input type="text" value="${esc(st.code || "")}" data-chg="tkcode" data-id="${t.id}" placeholder="Es. ABC123" autocomplete="off">` : ""}
+      </div>`;
+    });
+  });
+  return html;
+}
+
+/* ---------- INFO ---------- */
+const WX = {0:["Sereno","☀️"],1:["Prevalentemente sereno","🌤️"],2:["Parzialmente nuvoloso","⛅"],3:["Coperto","☁️"],45:["Nebbia","🌫️"],48:["Nebbia con brina","🌫️"],
+  51:["Pioviggine leggera","🌦️"],53:["Pioviggine","🌦️"],55:["Pioviggine intensa","🌧️"],61:["Pioggia debole","🌧️"],63:["Pioggia","🌧️"],65:["Pioggia forte","🌧️"],
+  71:["Neve debole","🌨️"],73:["Neve","🌨️"],75:["Neve forte","❄️"],80:["Rovesci deboli","🌦️"],81:["Rovesci","🌧️"],82:["Rovesci forti","⛈️"],95:["Temporale","⛈️"],96:["Temporale con grandine","⛈️"],99:["Temporale con grandine","⛈️"]};
+function wxHTML(j, ts){
+  const dly = j.daily; if (!dly || !dly.time) return "";
+  return `<table class="sun"><tr><th>Giorno</th><th>Cielo</th><th>Min/Max</th><th>Pioggia</th></tr>${dly.time.map((t,i) => { const w = WX[dly.weather_code[i]] || ["—","·"];
+    return `<tr><td>${t.slice(8,10)}/${t.slice(5,7)}</td><td>${w[1]} ${w[0]}</td><td>${Math.round(dly.temperature_2m_min[i])}° / ${Math.round(dly.temperature_2m_max[i])}°</td><td>${dly.precipitation_probability_max[i] ?? "–"}%</td></tr>`; }).join("")}</table>
+    <div class="muted small" style="margin-top:4px">Dati Open-Meteo, aggiornati il ${new Date(ts).toLocaleString("it-IT")}. Le previsioni a più giorni possono cambiare.</div>`;
+}
+async function loadWeather(){
+  const targets = $$("#wx-home, #wx-info"); if (!targets.length) return;
+  let cached = null; try { cached = JSON.parse(store.get(LS_WX) || "null"); } catch(e){}
+  const show = (h) => $$("#wx-home, #wx-info").forEach(el => el.innerHTML = h);
+  if (cached) show(wxHTML(cached.data, cached.ts));
+  if (cached && Date.now() - cached.ts < 3*3600*1000) return;
+  try {
+    const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FLondon&start_date=2026-10-31&end_date=2026-11-02");
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(); if (!j.daily) throw new Error("no data");
+    store.set(LS_WX, JSON.stringify({ ts:Date.now(), data:j })); show(wxHTML(j, Date.now()));
+  } catch(e){ if (!cached) show("Meteo non disponibile (offline o previsione non ancora pubblicata). Riprova più tardi."); }
+}
+function viewInfo(){
+  const hotel = BASE_STOPS[2], lst = BASE_STOPS[1];
+  const sunRows = TRIP.days.map(d => { const s = sunTimes(d.date); return `<tr><td>${d.label}</td><td>${s.rise}</td><td>${s.set}</td></tr>`; }).join("");
+  const nhm = BASE_STOPS.find(s => s.id === "d2-nhm");
+  return `<h2 style="margin-top:8px">Informazioni pratiche</h2>
+  <div class="card"><b>Meteo a Londra (31 ott – 2 nov)</b><div id="wx-info" style="margin-top:8px" class="muted small">Caricamento…</div></div>
+  <div class="card"><b>Alba e tramonto (stima astronomica ±5 min, ora di Londra)</b><table class="sun"><tr><th>Giorno</th><th>Alba</th><th>Tramonto</th></tr>${sunRows}</table></div>
+  <div class="card"><b>Fuso orario</b><p style="margin:6px 0 0">Londra è <b>1 ora indietro</b> rispetto all'Italia: 15:30 a Londra = 16:30 in Italia. Dal 25/10/2026 entrambi sono sull'ora solare (GMT a Londra), quindi la differenza resta di 1 ora per tutto il viaggio. Tutti gli orari dell'app sono ora di Londra.</p></div>
+  <div class="card"><b>Collegamenti</b>
+    <div class="kv" style="margin-top:8px"><b>Hotel ↔ Liverpool Street</b><span>A piedi, pochi minuti (stima; verifica sul percorso). <a target="_blank" rel="noopener" href="${G.dir(mapsQ(lst),{origin:mapsQ(hotel),mode:"walking"})}">Apri il percorso</a></span>
+      <b>Stansted ↔ Liverpool Street</b><span>Stansted Express, durata ~45–50 min (stima, da verificare). Duo Return: ritorno entro un mese, si viaggia sempre insieme, non cumulabile con Railcard. <a target="_blank" rel="noopener" href="https://www.stanstedexpress.com/">Orari ufficiali</a></span></div></div>
+  <div class="card"><b>Trasporti pubblici</b><ul style="margin:6px 0 0;padding-left:18px">
+    <li>Metropolitana e bus accettano pagamenti contactless (carta o telefono) e Oyster: usa sempre lo stesso mezzo di pagamento sia in entrata che in uscita. Tariffe e tetto giornaliero (cap): <a target="_blank" rel="noopener" href="https://tfl.gov.uk/fares">tfl.gov.uk/fares</a>.</li>
+    <li>Controlla lo stato delle linee prima di ogni spostamento (la domenica sono frequenti i lavori): <a target="_blank" rel="noopener" href="https://tfl.gov.uk/tube-dlr-overground/status/">stato linee TfL</a>.</li>
+    <li>Per tempi e percorsi aggiornati usa "Mezzi pubblici" di Google Maps dai pulsanti dell'app.</li></ul></div>
+  <div class="card"><b>Numeri di emergenza (Regno Unito)</b><div class="kv" style="margin-top:8px"><b>Emergenze</b><span><a href="tel:999">999</a> oppure <a href="tel:112">112</a></span><b>Polizia, non urgente</b><span><a href="tel:101">101</a></span><b>Sanità, non urgente</b><span><a href="tel:111">111</a> (NHS)</span></div></div>
+  <div class="card"><b>Promemoria volo di ritorno</b><ul style="margin:6px 0 0;padding-left:18px"><li>Volo lunedì 2 novembre alle 19:00 (ora di Londra), da Stansted.</li><li>Obiettivo: essere in aeroporto entro le 17:00.</li><li>Treno da Liverpool Street previsto fra le 15:30 e le 16:00 (orari da verificare sul sito).</li><li>Recupera i bagagli in hotel entro ~14:40 e passa il tempo con margine per ritardi.</li></ul></div>
+  <div class="card"><b>Natural History Museum – informazioni utili</b><ul style="margin:6px 0 0;padding-left:18px"><li>${esc(nhm.hours[0])}</li><li>${esc(nhm.price[0])}</li><li>${esc(nhm.book[0])}</li>${nhm.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    <div class="row" style="margin-top:8px"><a class="btn sm" target="_blank" rel="noopener" href="${nhm.site}">Sito ufficiale</a><a class="btn sm" target="_blank" rel="noopener" href="${G.search(mapsQ(nhm))}">Apri in Google Maps</a></div></div>
+  <details class="card"><summary>Informazioni che non ho potuto verificare (${UNVERIFIED.length})</summary><ul style="margin:8px 0 0;padding-left:18px">${UNVERIFIED.map(u => `<li>${esc(u)}</li>`).join("")}</ul>
+    <p class="muted small">Le informazioni con badge "Verificato" arrivano da pagine ufficiali consultate il ${LAST_CHECK}; gli altri valori sono stime o fonti non ufficiali e sono segnalati come tali.</p></details>
+  <h2>Impostazioni e dati</h2>
+  <div class="card">
+    <label class="f">Tema</label><select data-chg="theme"><option value="auto" ${state.theme === "auto" ? "selected" : ""}>Automatico (sistema)</option><option value="light" ${state.theme === "light" ? "selected" : ""}>Chiaro</option><option value="dark" ${state.theme === "dark" ? "selected" : ""}>Scuro</option></select>
+    <label class="f">Modalità "Sono in viaggio"</label><select data-chg="mode"><option value="auto" ${state.mode === "auto" ? "selected" : ""}>Automatica (si attiva nei giorni del viaggio)</option><option value="trip" ${state.mode === "trip" ? "selected" : ""}>Sempre attiva</option></select>
+    <p class="muted small">La posizione GPS non viene mai usata dall'app: "Portami lì" apre Google Maps, che parte dalla tua posizione solo se lo consenti lì.</p>
+    <div class="row" style="margin-top:6px"><button class="btn" data-act="export">⬇️ Esporta JSON</button>
+      <label class="btn" style="cursor:pointer">⬆️ Importa JSON<input type="file" accept="application/json,.json" data-chg="import" class="hidden"></label>
+      <button class="btn" data-act="share">📤 Condividi itinerario</button><button class="btn" data-act="print">🖨️ Stampa / PDF</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-act="resetitin">↩︎ Ripristina itinerario originale</button><button class="btn" data-act="resetall" style="color:var(--accent)">🗑 Cancella tutti i dati</button></div>
+    <details style="margin-top:12px"><summary class="small muted">Prova: simula data e ora di Londra</summary>
+      <input type="text" data-chg="simnow" value="${esc(state.simNow)}" placeholder="AAAA-MM-GGTHH:MM, es. 2026-11-01T10:30 (vuoto = ora reale)"></details>
+  </div>
+  <p class="muted small">Dati salvati solo su questo dispositivo (localStorage). Mappe © OpenStreetMap contributors. ${WIKI_CREDIT}. Meteo: Open-Meteo. App costruita da Claude · ultima verifica dati ${LAST_CHECK}.</p>`;
+}
+
+/* =====================================================================
+   RENDERING, EVENTI, AVVIO
+   ===================================================================== */
+function applyTheme(){
+  const r = document.documentElement;
+  if (state.theme === "auto") delete r.dataset.theme; else r.dataset.theme = state.theme;
+}
+function renderViews(){
+  applyTheme();
+  const v = state.ui.view;
+  if (v === "home") { const r = $("#home-root"); r.innerHTML = viewHome(); hydratePhotos(r); loadWeather(); tick(); }
+  else if (v === "itin") { const r = $("#itin-root"); r.innerHTML = viewItin(); hydratePhotos(r); }
+  else if (v === "map") { renderMap(); }
+  else if (v === "tickets") { $("#tickets-root").innerHTML = viewTickets(); }
+  else if (v === "info") { $("#info-root").innerHTML = viewInfo(); loadWeather(); }
+  renderBanner();
+  $("#tk-dot").classList.toggle("hidden", todoTickets().length === 0);
+}
+function renderAll(){ renderViews(); drawSheet(); }
+function showView(v){
+  state.ui.view = v; save();
+  $$("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "view-" + v));
+  $$("nav.bottom button").forEach(b => b.classList.toggle("on", b.dataset.nav === v));
+  renderViews();
+  if (v === "map") { setTimeout(() => { if (map) map.invalidateSize(); }, 80); } else window.scrollTo(0, 0);
+}
+
+/* ---------- Azioni ---------- */
+function setStatus(id, status){ setEdit(id, { status }); save(); renderAll(); }
+function openOnMap(id){
+  const s = getStop(id); if (!s || !hasXY(s)) { toast("Questo luogo non ha coordinate: usa il link Google Maps"); return; }
+  closeSheet();
+  if (state.ui.mapDay && state.ui.mapDay !== s.day) state.ui.mapDay = 0;
+  showView("map");
+  setTimeout(() => { const m = markerById[id]; if (map && m) { map.setView(m.getLatLng(), 16); m.openPopup(); } }, 200);
+}
+function exportJSON(){
+  const data = { app:"london-trip-2026", version:1, exportedAt:new Date().toISOString(),
+    state:{ edits:state.edits, custom:state.custom, tk:state.tk, theme:state.theme, mode:state.mode, travel:state.travel, ui:state.ui } };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
+  a.download = "london-trip-2026.json"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast("File esportato");
+}
+function importJSON(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const j = JSON.parse(fr.result);
+      if (!j || j.app !== "london-trip-2026" || !j.state || typeof j.state.edits !== "object" || !Array.isArray(j.state.custom)) throw new Error("formato");
+      if (!confirm("Importare questo itinerario? Le modifiche attuali su questo dispositivo verranno sostituite.")) return;
+      const d = defaultState(), s = j.state;
+      state = Object.assign(d, { edits:s.edits || {}, custom:s.custom || [], tk:s.tk || {}, theme:s.theme || "auto", mode:s.mode || "auto", travel:s.travel || "walking", ui:Object.assign(d.ui, s.ui || {}) });
+      save(); closeSheet(); showView(state.ui.view); toast("Itinerario importato");
+    } catch(e){ toast("File non valido: non è un export di London Trip 2026"); }
+  };
+  fr.onerror = () => toast("Impossibile leggere il file");
+  fr.readAsText(file);
+}
+function summaryText(){
+  return "London Trip 2026 (31 ott – 2 nov)\n" + [1,2,3].map(n => "\n" + dayInfo(n).label + "\n" + dayStops(n).map(s => `${s.time} ${s.name}`).join("\n")).join("\n");
+}
+async function shareTrip(){
+  const url = location.href.split("?")[0], text = summaryText();
+  if (navigator.share) { try { await navigator.share({ title:"London Trip 2026", text, url }); return; } catch(e){ if (e && e.name === "AbortError") return; } }
+  copyText(text + "\n\n" + url);
+}
+function printItin(){
+  closeSheet(); state.ui.day = 0; showView("itin"); setTimeout(() => window.print(), 350);
+}
+
+const actions = {
+  done:(d)=> { const s = getStop(d.id); setStatus(d.id, s.status === "done" ? "todo" : "done"); },
+  skip:(d)=> { const s = getStop(d.id); setStatus(d.id, s.status === "skipped" ? "todo" : "skipped"); },
+  remove:(d)=> { setEdit(d.id, { status:"removed" }); save(); closeSheet(); renderAll(); toast("Tappa eliminata: puoi ripristinarla da \"Mostra eliminate\""); },
+  restore:(d)=> setStatus(d.id, "todo"),
+  purge:(d)=> { if (!confirm("Eliminare definitivamente questo luogo?")) return; state.custom = state.custom.filter(s => s.id !== d.id); delete state.edits[d.id]; save(); renderAll(); },
+  detail:(d)=> openSheet(() => detailSheet(d.id)),
+  close:()=> closeSheet(),
+  fav:(d)=> { const s = getStop(d.id); setEdit(d.id, { fav:!s.fav }); save(); renderAll(); },
+  move:(d)=> { if (!moveStop(d.id, +d.dir)) toast("Non si può spostare oltre"); save(); renderAll(); },
+  resettime:(d)=> { const s = getStop(d.id); setEdit(d.id, { time:s.orig.time, day:s.orig.day }); placeByTime(d.id); save(); renderAll(); },
+  fday:(d)=> { state.ui.day = +d.val; save(); renderViews(); },
+  fcat:(d)=> { state.ui.cat = d.val; save(); renderViews(); },
+  fstatus:(d)=> { state.ui.status = d.val; save(); renderViews(); },
+  ffav:()=> { state.ui.favOnly = !state.ui.favOnly; save(); renderViews(); },
+  toggleremoved:()=> { state.ui.showRemoved = !state.ui.showRemoved; save(); renderViews(); },
+  route:(d)=> openSheet(() => routeSheet(+d.day)),
+  addplace:()=> openSheet(addPlaceSheet),
+  saveplace:()=> savePlace(),
+  geocode:()=> geocodeForm(),
+  copy:(d)=> copyText(d.text),
+  gomap:(d)=> openOnMap(d.id),
+  mapday:(d)=> { state.ui.mapDay = +d.val; save(); renderMap(); },
+  travel:(d)=> { state.travel = d.val; save(); renderMap(); },
+  mapnext:(d)=> {
+    const s = getStop(d.id), nx = followingStops(s, 8).find(hasXY); if (!nx) { toast("Nessuna tappa successiva sulla mappa"); return; }
+    if (state.ui.mapDay && state.ui.mapDay !== nx.day) { state.ui.mapDay = nx.day; save(); renderMap(); }
+    const m = markerById[nx.id]; if (m) { map.setView(m.getLatLng(), 16); m.openPopup(); }
+  },
+  tkdone:(d)=> { state.tk[d.id] = Object.assign({}, state.tk[d.id], { chk:true }); save(); renderAll(); toast("Segnato come prenotato"); },
+  print:()=> printItin(),
+  export:()=> exportJSON(),
+  share:()=> shareTrip(),
+  resetitin:()=> { if (confirm("Ripristinare l'itinerario originale? Orari, ordine, luoghi aggiunti, stati e note delle tappe tornano ai valori iniziali (biglietti e preferenze restano).")) { state.edits = {}; state.custom = []; save(); renderAll(); toast("Itinerario ripristinato"); } },
+  resetall:()=> { if (confirm("Cancellare TUTTI i dati salvati su questo dispositivo (itinerario, biglietti, codici, note, preferenze)?")) { state = defaultState(); store.del(LS_KEY); save(); closeSheet(); showView("home"); toast("Dati ripristinati"); } },
+  sheetbg:(d, el, e)=> { if (e.target === el) closeSheet(); }
+};
+document.addEventListener("click", e => {
+  const nav = e.target.closest("[data-nav]"); if (nav) { closeSheet(); showView(nav.dataset.nav); return; }
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const fn = actions[el.dataset.act]; if (fn) fn(el.dataset, el, e);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sheetRender) closeSheet(); });
+
+const changes = {
+  time:(el)=> { if (!el.value) return; setEdit(el.dataset.id, { time:el.value }); placeByTime(el.dataset.id); save(); renderAll(); },
+  day:(el)=> { setEdit(el.dataset.id, { day:+el.value }); placeByTime(el.dataset.id); save(); renderAll(); },
+  note:(el)=> { setEdit(el.dataset.id, { note:el.value.trim() }); save(); renderViews(); },
+  donechk:(el)=> setStatus(el.dataset.id, el.checked ? "done" : "todo"),
+  tkchk:(el)=> { state.tk[el.dataset.id] = Object.assign({}, state.tk[el.dataset.id], { chk:el.checked }); save(); renderAll(); },
+  tkcode:(el)=> { state.tk[el.dataset.id] = Object.assign({}, state.tk[el.dataset.id], { code:el.value.trim() }); save(); },
+  tkday:(el)=> { state.tk[el.dataset.id] = Object.assign({}, state.tk[el.dataset.id], { day:el.value ? +el.value : "" }); save(); renderBanner(); },
+  tkslot:(el)=> { state.tk[el.dataset.id] = Object.assign({}, state.tk[el.dataset.id], { slot:el.value }); save(); renderBanner(); },
+  theme:(el)=> { state.theme = el.value; save(); renderViews(); },
+  mode:(el)=> { state.mode = el.value; save(); renderViews(); },
+  simnow:(el)=> { state.simNow = el.value.trim(); save(); renderBanner(); toast(state.simNow ? "Ora simulata attiva" : "Ora reale"); },
+  import:(el)=> { if (el.files && el.files[0]) importJSON(el.files[0]); el.value = ""; }
+};
+document.addEventListener("change", e => {
+  const el = e.target.closest("[data-chg]"); if (!el) return;
+  const fn = changes[el.dataset.chg]; if (fn) fn(el);
+});
+
+/* ---------- Avvio ---------- */
+(function init(){
+  showView(state.ui.view || "home");
+  setInterval(tick, 1000);
+  let lastMin = londonNow().min;
+  setInterval(() => {
+    const n = londonNow(); renderBanner();
+    if (n.min !== lastMin) { lastMin = n.min; if (state.ui.view === "home" && !sheetRender) renderViews(); }
+  }, 20000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { renderBanner(); tick(); } });
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(() => {});
+})();
+
+</script>
+</body>
+</html>

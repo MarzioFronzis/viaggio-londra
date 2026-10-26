@@ -1,0 +1,16 @@
+{
+  "name": "London Trip 2026",
+  "short_name": "London 2026",
+  "description": "Guida di viaggio interattiva per Londra, 31 ottobre – 2 novembre 2026",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1630",
+  "theme_color": "#0b1630",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
